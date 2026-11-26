@@ -75,6 +75,7 @@
 
         /* Prevent iOS Safari auto-zoom on form input focus (<16px triggers zoom) */
         input[type="text"],
+        input[type="password"],
         input[type="number"],
         input[type="date"],
         select,
@@ -85,6 +86,7 @@
 
         @media (min-width: 768px) {
             input[type="text"],
+            input[type="password"],
             input[type="number"],
             input[type="date"],
             select,
@@ -154,7 +156,7 @@
         </div>
     </div>
 
-    <!-- Admin PIN Modal (Fixed Admin PIN: 1234 - Settings locked) -->
+    <!-- Admin PIN / Password Modal -->
     <div id="admin-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-100">
             <div class="flex items-center justify-between mb-3">
@@ -171,8 +173,8 @@
             <p class="text-xs text-slate-500 mb-4">Enter Admin Password / PIN to unlock Transaction Log, Per-Crop Reset, Add Crop, Delete Entries, and Backup/Reset tools.</p>
             <form id="admin-pin-form" class="space-y-3.5">
                 <div>
-                    <label for="admin-pin-input" class="block text-xs font-semibold text-slate-600 mb-1">Admin PIN</label>
-                    <input type="password" id="admin-pin-input" inputmode="numeric" maxlength="12" required placeholder="Enter Admin PIN" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-farm-600 focus:ring-2 focus:ring-farm-600/20 outline-none">
+                    <label for="admin-pin-input" class="block text-xs font-semibold text-slate-600 mb-1">Admin Password / PIN</label>
+                    <input type="password" id="admin-pin-input" autocapitalize="off" autocorrect="off" autocomplete="current-password" enterkeyhint="go" maxlength="20" required placeholder="Enter Admin Password / PIN" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-farm-600 focus:ring-2 focus:ring-farm-600/20 outline-none">
                 </div>
                 <div class="flex justify-end gap-2 pt-1">
                     <button type="button" onclick="closeAdminModal()" class="min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
@@ -201,15 +203,15 @@
             <form id="admin-password-settings-form" class="space-y-3.5">
                 <div>
                     <label for="current-admin-pw-input" class="block text-xs font-semibold text-slate-600 mb-1">Current Admin Password / PIN</label>
-                    <input type="password" id="current-admin-pw-input" maxlength="20" required placeholder="Enter current password" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20 outline-none">
+                    <input type="password" id="current-admin-pw-input" autocapitalize="off" autocorrect="off" maxlength="20" required placeholder="Enter current password" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20 outline-none">
                 </div>
                 <div>
                     <label for="new-admin-pw-input" class="block text-xs font-semibold text-slate-600 mb-1">New Admin Password / PIN</label>
-                    <input type="password" id="new-admin-pw-input" maxlength="20" required placeholder="Enter new password (min 4 chars)" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20 outline-none">
+                    <input type="password" id="new-admin-pw-input" autocapitalize="off" autocorrect="off" maxlength="20" required placeholder="Enter new password (min 4 chars)" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20 outline-none">
                 </div>
                 <div>
                     <label for="confirm-admin-pw-input" class="block text-xs font-semibold text-slate-600 mb-1">Confirm New Password / PIN</label>
-                    <input type="password" id="confirm-admin-pw-input" maxlength="20" required placeholder="Re-enter new password" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20 outline-none">
+                    <input type="password" id="confirm-admin-pw-input" autocapitalize="off" autocorrect="off" maxlength="20" required placeholder="Re-enter new password" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20 outline-none">
                 </div>
                 <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
                     <button type="button" onclick="resetAdminPasswordToDefault()" class="min-h-[40px] px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Reset to Default (1234)</button>
@@ -222,7 +224,7 @@
         </div>
     </div>
 
-    <!-- Password Prompt Modal for Reset Actions (Admin PIN: 1234 - Original settings untouched) -->
+    <!-- Password Prompt Modal for Reset Actions -->
     <div id="reset-password-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="reset-password-modal-title">
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-100">
             <div class="flex items-center justify-between mb-3">
@@ -242,7 +244,7 @@
             <form id="reset-password-form" class="space-y-3.5">
                 <div>
                     <label for="reset-password-input" class="block text-xs font-semibold text-slate-600 mb-1">Password</label>
-                    <input type="password" id="reset-password-input" inputmode="numeric" maxlength="20" required placeholder="Enter password" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-rose-600 focus:ring-2 focus:ring-rose-600/20 outline-none">
+                    <input type="password" id="reset-password-input" autocapitalize="off" autocorrect="off" enterkeyhint="go" maxlength="20" required placeholder="Enter password" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-rose-600 focus:ring-2 focus:ring-rose-600/20 outline-none">
                 </div>
                 <div class="flex justify-end gap-2 pt-1">
                     <button type="button" onclick="closeResetPasswordModal()" class="min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
@@ -276,7 +278,7 @@
         </div>
     </div>
 
-    <!-- Edit Transaction Modal (Admin Only - Original settings untouched) -->
+    <!-- Edit Transaction Modal (Admin Only) -->
     <div id="edit-tx-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="edit-tx-modal-title">
         <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-100 max-h-[88dvh] overflow-y-auto">
             <div class="flex items-center justify-between mb-3">
@@ -930,11 +932,11 @@
 
         function getAdminPassword() {
             const saved = safeGetStorage(ADMIN_PASSWORD_STORAGE_KEY);
-            return (saved && saved.trim().length > 0) ? saved : DEFAULT_ADMIN_PIN;
+            return (saved && saved.trim().length > 0) ? saved.trim() : DEFAULT_ADMIN_PIN;
         }
 
         function setAdminPassword(newPw) {
-            safeSetStorage(ADMIN_PASSWORD_STORAGE_KEY, newPw);
+            safeSetStorage(ADMIN_PASSWORD_STORAGE_KEY, newPw.trim());
         }
 
         function getActiveRole() {
@@ -988,11 +990,14 @@
         }
 
         function openAdminModal() {
-            document.getElementById('admin-pin-input').value = '';
+            const input = document.getElementById('admin-pin-input');
+            input.value = '';
             const modal = document.getElementById('admin-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
-            setTimeout(() => document.getElementById('admin-pin-input').focus(), 50);
+            setTimeout(() => {
+                input.focus({ preventScroll: true });
+            }, 80);
         }
 
         function closeAdminModal() {
