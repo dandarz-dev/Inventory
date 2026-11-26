@@ -143,7 +143,7 @@
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
-            <p class="text-xs text-slate-500 mb-4">Enter Admin Password / PIN to unlock Transaction Log, Per-Crop Reset, Add Crop, Delete Entries, and Backup/Reset tools.</p>
+            <p class="text-xs text-slate-500 mb-4">Enter Admin Password / PIN to unlock Transaction Log, GCash Verification, Per-Crop Reset, Add Crop, Delete Entries, and Backup/Reset tools.</p>
             <form id="admin-pin-form" class="space-y-3.5">
                 <div>
                     <label for="admin-pin-input" class="block text-xs font-semibold text-slate-600 mb-1">Admin Password / PIN</label>
@@ -157,7 +157,7 @@
         </div>
     </div>
 
-    <!-- Admin Password Settings Modal (Admin Only) -->
+    <!-- Admin Password & GCash Settings Modal (Admin Only) -->
     <div id="admin-password-settings-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="admin-pw-settings-title">
         <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-100 max-h-[88dvh] overflow-y-auto">
             <div class="flex items-center justify-between mb-3">
@@ -165,15 +165,39 @@
                     <div class="p-2 bg-amber-50 text-amber-700 rounded-xl shrink-0">
                         <i data-lucide="settings" class="w-5 h-5"></i>
                     </div>
-                    <h3 id="admin-pw-settings-title" class="text-base font-bold text-slate-900">Admin Password Settings</h3>
+                    <h3 id="admin-pw-settings-title" class="text-base font-bold text-slate-900">Admin &amp; GCash Settings</h3>
                 </div>
                 <button type="button" onclick="closeAdminPasswordSettingsModal()" aria-label="Close modal" class="min-w-[40px] min-h-[40px] flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-xl">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
-            <p class="text-xs text-slate-500 mb-4">Change the Admin PIN / password used for Admin Login, Edit/Delete in Transaction Log, and Reset actions.</p>
+            <p class="text-xs text-slate-500 mb-4">Configure receiving GCash account details for farm remittances or update your Admin PIN / password.</p>
             <div id="admin-pw-settings-popup-msg" class="hidden text-xs font-semibold px-3 py-2 rounded-xl mb-3 border"></div>
+
+            <!-- Receiving GCash Account Form -->
+            <form id="gcash-settings-form" class="space-y-3 pb-4 mb-4 border-b border-slate-200">
+                <p class="text-xs font-bold uppercase tracking-wider text-sky-800 flex items-center gap-1.5">
+                    <i data-lucide="smartphone" class="w-3.5 h-3.5 text-sky-600"></i>
+                    Receiving GCash Details (Shown to Staff)
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label for="gcash-account-name-input" class="block text-xs font-semibold text-slate-600 mb-1">GCash Account Name</label>
+                        <input type="text" id="gcash-account-name-input" required placeholder="e.g., Danilo Darantinao" class="w-full min-h-[42px] px-3 py-2 rounded-xl border border-slate-200 focus:border-sky-600 outline-none">
+                    </div>
+                    <div>
+                        <label for="gcash-account-number-input" class="block text-xs font-semibold text-slate-600 mb-1">GCash Mobile Number</label>
+                        <input type="text" id="gcash-account-number-input" required placeholder="e.g., 0917 123 4567" class="w-full min-h-[42px] px-3 py-2 rounded-xl border border-slate-200 focus:border-sky-600 outline-none">
+                    </div>
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="min-h-[38px] px-3.5 py-1.5 rounded-xl text-xs font-semibold text-white bg-sky-600 hover:bg-sky-700 transition cursor-pointer">Save GCash Info</button>
+                </div>
+            </form>
+
+            <!-- Admin Password Form -->
             <form id="admin-password-settings-form" class="space-y-3.5">
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-700">Change Admin Password / PIN</p>
                 <div>
                     <label for="current-admin-pw-input" class="block text-xs font-semibold text-slate-600 mb-1">Current Admin Password / PIN</label>
                     <input type="password" id="current-admin-pw-input" autocapitalize="off" autocorrect="off" maxlength="20" required placeholder="Enter current password" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20 outline-none">
@@ -212,7 +236,7 @@
                 </button>
             </div>
             <p id="reset-password-target-label" class="text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-100 px-3 py-2 rounded-xl mb-3"></p>
-            <p class="text-xs text-slate-500 mb-4">Enter the password to confirm this reset action. Original crop settings and PIN stay unchanged.</p>
+            <p class="text-xs text-slate-500 mb-4">Enter the password to confirm this action. Original crop settings and PIN stay unchanged.</p>
             <div id="reset-password-popup-msg" class="hidden text-xs font-semibold px-3 py-2 rounded-xl mb-3 border"></div>
             <form id="reset-password-form" class="space-y-3.5">
                 <div>
@@ -221,9 +245,32 @@
                 </div>
                 <div class="flex justify-end gap-2 pt-1">
                     <button type="button" onclick="closeResetPasswordModal()" class="min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
-                    <button type="submit" class="min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 transition">Verify &amp; Reset</button>
+                    <button type="submit" class="min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 transition">Verify &amp; Proceed</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- GCash Payment Verification Pop-up Modal (Admin Only) -->
+    <div id="gcash-verify-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="gcash-verify-modal-title">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-100">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2.5">
+                    <div id="gcash-verify-icon-wrap" class="p-2 bg-emerald-50 text-emerald-700 rounded-xl shrink-0">
+                        <i data-lucide="badge-check" class="w-5 h-5"></i>
+                    </div>
+                    <h3 id="gcash-verify-modal-title" class="text-base font-bold text-slate-900">Confirm GCash Verification</h3>
+                </div>
+                <button type="button" onclick="closeGCashVerifyModal()" aria-label="Close modal" class="min-w-[40px] min-h-[40px] flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-xl">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <p id="gcash-verify-msg" class="text-xs text-slate-600 mb-3 leading-relaxed"></p>
+            <div id="gcash-verify-details" class="bg-sky-50/80 border border-sky-200 rounded-xl p-3 mb-4 text-xs space-y-1"></div>
+            <div class="flex justify-end gap-2 pt-1">
+                <button type="button" onclick="closeGCashVerifyModal()" class="min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition cursor-pointer">Cancel</button>
+                <button type="button" id="gcash-verify-confirm-btn" class="min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition cursor-pointer">Confirm</button>
+            </div>
         </div>
     </div>
 
@@ -381,7 +428,7 @@
                                 <span id="live-sync-text">Live Sync: Connecting...</span>
                             </span>
                         </div>
-                        <p class="text-xs sm:text-sm text-emerald-100/80 mt-0.5">Vegetable Harvest, Stock &amp; Dispatch Inventory System</p>
+                        <p class="text-xs sm:text-sm text-emerald-100/80 mt-0.5">Vegetable Harvest, Stock, Dispatch &amp; GCash Remittance</p>
                     </div>
                 </div>
 
@@ -399,7 +446,7 @@
                         </button>
                         <div id="backup-dropdown" class="hidden absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-40 text-slate-700">
                             <button type="button" onclick="openAdminPasswordSettingsModal()" class="w-full min-h-[44px] px-4 py-2.5 text-left text-xs font-semibold text-amber-800 hover:bg-amber-50 active:bg-amber-100 flex items-center gap-2.5">
-                                <i data-lucide="settings" class="w-4 h-4 text-amber-700 shrink-0"></i> Change Admin Password
+                                <i data-lucide="settings" class="w-4 h-4 text-amber-700 shrink-0"></i> Admin &amp; GCash Settings
                             </button>
                             <div class="border-t border-slate-100 my-1"></div>
                             <button type="button" onclick="exportJSON()" class="w-full min-h-[44px] px-4 py-2.5 text-left text-xs font-medium hover:bg-slate-50 active:bg-slate-100 flex items-center gap-2.5">
@@ -429,79 +476,94 @@
     <!-- Main Content Container -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6">
 
-        <!-- KPI Summary Cards -->
-        <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <!-- KPI Summary Cards (5 Cards: Stock, Value, Sales, Spoilage, GCash Remitted) -->
+        <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
             <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-earth-200/80 print-shadow-none flex items-start justify-between gap-2">
                 <div class="min-w-0">
                     <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 truncate">Available Stock</p>
-                    <h2 id="kpi-available-kg" class="text-xl sm:text-3xl font-extrabold text-farm-900 mt-1">0.0 kg</h2>
+                    <h2 id="kpi-available-kg" class="text-xl sm:text-2xl font-extrabold text-farm-900 mt-1">0.0 kg</h2>
                     <p id="kpi-crop-count" class="text-[11px] sm:text-xs text-slate-500 mt-1 truncate">Across 0 active batches</p>
                 </div>
-                <div class="p-2.5 sm:p-3 rounded-2xl bg-farm-100 text-farm-800 shrink-0">
-                    <i data-lucide="package-check" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                <div class="p-2.5 rounded-2xl bg-farm-100 text-farm-800 shrink-0">
+                    <i data-lucide="package-check" class="w-5 h-5"></i>
                 </div>
             </div>
 
             <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-earth-200/80 print-shadow-none flex items-start justify-between gap-2">
                 <div class="min-w-0">
                     <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 truncate">Est. Stock Value</p>
-                    <h2 id="kpi-stock-value" class="text-xl sm:text-3xl font-extrabold text-emerald-700 mt-1">₱0.00</h2>
+                    <h2 id="kpi-stock-value" class="text-xl sm:text-2xl font-extrabold text-emerald-700 mt-1">₱0.00</h2>
                     <p class="text-[11px] sm:text-xs text-slate-500 mt-1 truncate">Farmgate valuation</p>
                 </div>
-                <div class="p-2.5 sm:p-3 rounded-2xl bg-emerald-50 text-emerald-700 shrink-0">
-                    <i data-lucide="coins" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                <div class="p-2.5 rounded-2xl bg-emerald-50 text-emerald-700 shrink-0">
+                    <i data-lucide="coins" class="w-5 h-5"></i>
                 </div>
             </div>
 
             <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-earth-200/80 print-shadow-none flex items-start justify-between gap-2">
                 <div class="min-w-0">
                     <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 truncate">Sales Revenue</p>
-                    <h2 id="kpi-sold-revenue" class="text-xl sm:text-3xl font-extrabold text-blue-700 mt-1">₱0.00</h2>
+                    <h2 id="kpi-sold-revenue" class="text-xl sm:text-2xl font-extrabold text-blue-700 mt-1">₱0.00</h2>
                     <p id="kpi-sold-kg" class="text-[11px] sm:text-xs text-slate-500 mt-1 truncate">0.0 kg dispatched</p>
                 </div>
-                <div class="p-2.5 sm:p-3 rounded-2xl bg-blue-50 text-blue-700 shrink-0">
-                    <i data-lucide="trending-up" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                <div class="p-2.5 rounded-2xl bg-blue-50 text-blue-700 shrink-0">
+                    <i data-lucide="trending-up" class="w-5 h-5"></i>
                 </div>
             </div>
 
             <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-earth-200/80 print-shadow-none flex items-start justify-between gap-2">
                 <div class="min-w-0">
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 truncate">GCash Remitted</p>
+                    <h2 id="kpi-remitted-total" class="text-xl sm:text-2xl font-extrabold text-sky-700 mt-1">₱0.00</h2>
+                    <p id="kpi-unremitted-balance" class="text-[11px] sm:text-xs font-semibold text-amber-700 mt-1 truncate">Unremitted: ₱0.00</p>
+                </div>
+                <div class="p-2.5 rounded-2xl bg-sky-50 text-sky-700 shrink-0">
+                    <i data-lucide="smartphone" class="w-5 h-5"></i>
+                </div>
+            </div>
+
+            <div class="col-span-2 sm:col-span-1 bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-earth-200/80 print-shadow-none flex items-start justify-between gap-2">
+                <div class="min-w-0">
                     <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 truncate">Spoilage / Loss</p>
-                    <h2 id="kpi-spoilage-kg" class="text-xl sm:text-3xl font-extrabold text-rose-600 mt-1">0.0 kg</h2>
+                    <h2 id="kpi-spoilage-kg" class="text-xl sm:text-2xl font-extrabold text-rose-600 mt-1">0.0 kg</h2>
                     <p id="kpi-spoilage-rate" class="text-[11px] sm:text-xs text-slate-500 mt-1 truncate">0.0% of total harvest</p>
                 </div>
-                <div class="p-2.5 sm:p-3 rounded-2xl bg-rose-50 text-rose-600 shrink-0">
-                    <i data-lucide="alert-octagon" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                <div class="p-2.5 rounded-2xl bg-rose-50 text-rose-600 shrink-0">
+                    <i data-lucide="alert-octagon" class="w-5 h-5"></i>
                 </div>
             </div>
         </section>
 
-        <!-- Workspace Grid: Stock Movement Form (Left) + Live Stock Overview (Right) -->
+        <!-- Workspace Grid: Stock Movement & GCash Remit Form (Left) + Live Stock Overview (Right) -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
 
-            <!-- Left Column: Inventory & Stock Movement Form -->
+            <!-- Left Column: Inventory, Stock Movement & GCash Remittance Form -->
             <section id="movement-form-section" class="lg:col-span-5 bg-white rounded-2xl shadow-xs border border-earth-200/80 overflow-hidden no-print">
                 <div class="bg-earth-100/70 px-4 sm:px-5 py-4 border-b border-earth-200/80">
                     <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
                         <i data-lucide="clipboard-edit" class="w-5 h-5 text-farm-800"></i>
-                        Record Stock Movement
+                        Record Stock &amp; Remittance
                     </h3>
-                    <p class="text-xs text-slate-500 mt-0.5">Log daily harvest, market dispatch, or post-harvest loss</p>
+                    <p class="text-xs text-slate-500 mt-0.5">Log harvest, sale, spoilage, or GCash remittance sent</p>
                 </div>
 
-                <!-- 3 Action Mode Tabs -->
-                <div class="grid grid-cols-3 border-b border-slate-200 bg-slate-50/70 p-1.5 gap-1.5" role="tablist">
-                    <button type="button" role="tab" aria-selected="true" onclick="switchMode('harvest')" id="tab-harvest" class="mode-tab min-h-[44px] flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs font-bold transition cursor-pointer bg-farm-800 text-white shadow-xs">
-                        <i data-lucide="sprout" class="w-4 h-4 shrink-0"></i>
-                        <span>Harvest In</span>
+                <!-- 4 Action Mode Tabs -->
+                <div class="grid grid-cols-4 border-b border-slate-200 bg-slate-50/70 p-1.5 gap-1" role="tablist">
+                    <button type="button" role="tab" aria-selected="true" onclick="switchMode('harvest')" id="tab-harvest" class="mode-tab min-h-[42px] flex flex-col sm:flex-row items-center justify-center gap-1 py-2 px-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer bg-emerald-700 text-white shadow-xs">
+                        <i data-lucide="sprout" class="w-3.5 h-3.5 shrink-0"></i>
+                        <span>Harvest</span>
                     </button>
-                    <button type="button" role="tab" aria-selected="false" onclick="switchMode('sale')" id="tab-sale" class="mode-tab min-h-[44px] flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs font-bold transition cursor-pointer text-slate-600 hover:bg-white">
-                        <i data-lucide="truck" class="w-4 h-4 shrink-0"></i>
-                        <span>Sale / Out</span>
+                    <button type="button" role="tab" aria-selected="false" onclick="switchMode('sale')" id="tab-sale" class="mode-tab min-h-[42px] flex flex-col sm:flex-row items-center justify-center gap-1 py-2 px-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer bg-blue-50 text-blue-700 border border-blue-200/80 hover:bg-blue-100">
+                        <i data-lucide="truck" class="w-3.5 h-3.5 shrink-0"></i>
+                        <span>Sale</span>
                     </button>
-                    <button type="button" role="tab" aria-selected="false" onclick="switchMode('spoilage')" id="tab-spoilage" class="mode-tab min-h-[44px] flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs font-bold transition cursor-pointer text-slate-600 hover:bg-white">
-                        <i data-lucide="trash" class="w-4 h-4 shrink-0"></i>
+                    <button type="button" role="tab" aria-selected="false" onclick="switchMode('spoilage')" id="tab-spoilage" class="mode-tab min-h-[42px] flex flex-col sm:flex-row items-center justify-center gap-1 py-2 px-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer bg-rose-50 text-rose-700 border border-rose-200/80 hover:bg-rose-100">
+                        <i data-lucide="trash" class="w-3.5 h-3.5 shrink-0"></i>
                         <span>Spoilage</span>
+                    </button>
+                    <button type="button" role="tab" aria-selected="false" onclick="switchMode('remit')" id="tab-remit" class="mode-tab min-h-[42px] flex flex-col sm:flex-row items-center justify-center gap-1 py-2 px-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer bg-sky-50 text-sky-700 border border-sky-200/80 hover:bg-sky-100">
+                        <i data-lucide="smartphone" class="w-3.5 h-3.5 shrink-0"></i>
+                        <span>GCash</span>
                     </button>
                 </div>
 
@@ -665,6 +727,59 @@
                             <span>Log Spoilage &amp; Adjust Stock</span>
                         </button>
                     </form>
+
+                    <!-- FORM 4: RECORD GCASH REMITTANCE -->
+                    <form id="form-remit" class="space-y-4 hidden">
+                        <!-- Receiving GCash Account Banner -->
+                        <div class="bg-sky-50 border border-sky-200 rounded-xl p-3 flex items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <p class="text-[11px] font-bold uppercase tracking-wider text-sky-700">Send Remittance To GCash:</p>
+                                <p id="display-gcash-info" class="text-xs sm:text-sm font-extrabold text-sky-950 truncate">Danilo Darantinao • Set Number in Admin</p>
+                            </div>
+                            <button type="button" onclick="copyGCashNumber()" class="min-h-[36px] px-2.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-[11px] font-bold shrink-0 inline-flex items-center gap-1 cursor-pointer">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                <span>Copy</span>
+                            </button>
+                        </div>
+
+                        <!-- Unremitted Cash Summary Box -->
+                        <div class="bg-amber-50/80 border border-amber-200/80 rounded-xl px-3.5 py-2.5 flex items-center justify-between text-xs">
+                            <span class="font-semibold text-amber-900">Est. Unremitted Paid Sales:</span>
+                            <span id="form-unremitted-badge" class="font-extrabold text-amber-900 text-sm">₱0.00</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <div>
+                                <label for="remit-date" class="block text-xs font-semibold text-slate-600 mb-1">Remittance Date</label>
+                                <input type="date" id="remit-date" required class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-sky-600 focus:ring-2 focus:ring-sky-600/20 outline-none bg-white">
+                            </div>
+                            <div>
+                                <label for="remit-amount" class="block text-xs font-semibold text-slate-600 mb-1">Amount Sent (₱)</label>
+                                <input type="number" id="remit-amount" inputmode="decimal" step="0.01" min="1" required placeholder="e.g., 5000.00" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-sky-600 focus:ring-2 focus:ring-sky-600/20 outline-none">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <div>
+                                <label for="remit-ref" class="block text-xs font-semibold text-slate-600 mb-1">GCash Reference No.</label>
+                                <input type="text" id="remit-ref" required placeholder="e.g., 9012 345 678901" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-sky-600 focus:ring-2 focus:ring-sky-600/20 outline-none">
+                            </div>
+                            <div>
+                                <label for="remit-sender" class="block text-xs font-semibold text-slate-600 mb-1">Remitted By (Staff Name)</label>
+                                <input type="text" id="remit-sender" required placeholder="e.g., Kuya Jun / Farm Caretaker" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-sky-600 focus:ring-2 focus:ring-sky-600/20 outline-none">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="remit-notes" class="block text-xs font-semibold text-slate-600 mb-1">Coverage / Notes (Optional)</label>
+                            <input type="text" id="remit-notes" placeholder="e.g., Benta ng Atsal at Pakwan sa Ormoc Market" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-sky-600 focus:ring-2 focus:ring-sky-600/20 outline-none">
+                        </div>
+
+                        <button type="submit" class="w-full min-h-[46px] py-3 px-4 rounded-xl bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white font-bold text-sm shadow-sm flex items-center justify-center gap-2 transition cursor-pointer">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span>Submit GCash Remittance Log</span>
+                        </button>
+                    </form>
                 </div>
             </section>
 
@@ -712,7 +827,7 @@
 
                 <!-- Bottom Bar of Live Inventory Balances: Export to CSV -->
                 <div class="px-4 sm:px-5 py-3.5 bg-slate-50/80 border-t border-earth-200/80 flex flex-wrap items-center justify-between gap-3 no-print">
-                    <span class="text-xs text-slate-500">Download full transaction records in Excel-compatible CSV format</span>
+                    <span class="text-xs text-slate-500">Download full transaction &amp; remittance records in CSV format</span>
                     <button type="button" onclick="exportCSV()" class="min-h-[40px] inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-farm-800 hover:bg-farm-900 active:bg-farm-950 text-white text-xs font-semibold shadow-xs transition cursor-pointer" title="Download Excel-compatible CSV">
                         <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
                         <span>Export to CSV</span>
@@ -720,6 +835,48 @@
                 </div>
             </section>
         </div>
+
+        <!-- GCash Remittance & Reconciliation Log -->
+        <section id="remittance-log-section" class="bg-white rounded-2xl shadow-xs border border-sky-200/90 print-shadow-none overflow-hidden">
+            <div class="bg-sky-50/80 px-4 sm:px-5 py-4 border-b border-sky-200/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="smartphone" class="w-5 h-5 text-sky-600"></i>
+                        GCash Remittance Log &amp; Verification
+                    </h3>
+                    <p class="text-xs text-slate-600 mt-0.5">Live remittance records sent by farm caretaker • Admin can verify once received in GCash</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <span class="px-3 py-1.5 rounded-xl bg-white border border-sky-200 font-bold text-sky-900">
+                        Verified: <span id="remit-verified-total">₱0.00</span>
+                    </span>
+                    <span class="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 font-bold text-amber-800">
+                        For Verification: <span id="remit-pending-verify-total">₱0.00</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="table-scroll-wrap">
+                <table class="w-full min-w-[680px] text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/90 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                            <th class="py-3.5 px-4">Date</th>
+                            <th class="py-3 px-3">GCash Ref. No.</th>
+                            <th class="py-3 px-3">Sent By</th>
+                            <th class="py-3 px-3 text-right">Amount</th>
+                            <th class="py-3 px-4">Coverage / Notes</th>
+                            <th class="py-3 px-3 text-center">Status</th>
+                            <th class="py-3 px-4 text-center admin-only-control no-print">Admin Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="remittance-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                </table>
+            </div>
+
+            <div id="remittance-empty-state" class="py-8 px-6 text-center text-xs text-slate-500">
+                No GCash remittances recorded yet. Use the <strong>GCash</strong> tab above to log a transfer.
+            </div>
+        </section>
 
         <!-- Transaction History Log & Filtering (Admin Only) -->
         <section id="history-log-section" class="admin-only-control bg-white rounded-2xl shadow-xs border border-earth-200/80 print-shadow-none overflow-hidden">
@@ -740,11 +897,11 @@
                     </div>
 
                     <div class="grid grid-cols-2 sm:flex gap-2.5">
-                        <select id="filter-type" onchange="renderAll()" aria-label="Filter by transaction type" class="min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-700 focus:border-farm-600 outline-none">
-                            <option value="ALL">All Types</option>
-                            <option value="HARVEST">Harvest (In)</option>
-                            <option value="SALE">Sales (Out)</option>
-                            <option value="SPOILAGE">Spoilage (Loss)</option>
+                        <select id="filter-type" onchange="syncFilterTypeStyle(); renderAll();" aria-label="Filter by transaction type" class="min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold text-slate-700 focus:border-farm-600 outline-none transition">
+                            <option value="ALL" class="bg-white text-slate-800 font-semibold">All Types</option>
+                            <option value="HARVEST" class="bg-emerald-100 text-emerald-900 font-bold">🟢 HARVEST (In)</option>
+                            <option value="SALE" class="bg-blue-100 text-blue-900 font-bold">🔵 SALE (Out)</option>
+                            <option value="SPOILAGE" class="bg-rose-100 text-rose-900 font-bold">🔴 SPOILAGE (Loss)</option>
                         </select>
 
                         <select id="filter-crop" onchange="renderAll()" aria-label="Filter by crop" class="min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-700 focus:border-farm-600 outline-none">
@@ -781,12 +938,12 @@
     <!-- Footer -->
     <footer class="bg-white border-t border-earth-200/80 py-4 px-4 sm:px-6 lg:px-8 mt-8">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 text-center sm:text-left">
-            <p class="font-medium text-slate-700">Tyler's Integrated Farm &bull; Vegetable Harvest &amp; Inventory Management System</p>
-            <p>Live autosync via Firebase (<code class="text-[11px] bg-slate-100 px-1.5 py-0.5 rounded">tif-inventory</code>) + local cache. Export CSV/JSON regularly for backup.</p>
+            <p class="font-medium text-slate-700">Tyler's Integrated Farm &bull; Vegetable Harvest, Inventory &amp; GCash Remittance</p>
+            <p>Live autosync via Firebase (<code class="text-[11px] bg-slate-100 px-1.5 py-0.5 rounded">tif-inventory</code>) + local cache.</p>
         </div>
     </footer>
 
-    <!-- Bottom Role Bar (Admin vs User - Settings Locked) -->
+    <!-- Bottom Role Bar -->
     <div id="role-bar" class="bg-farm-950 text-white border-t border-emerald-500/30 no-print">
         <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
             <div class="flex items-center gap-2.5">
@@ -794,7 +951,7 @@
                     <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-300"></i>
                     <span id="role-label">ADMIN MODE</span>
                 </span>
-                <span id="role-desc" class="text-emerald-50 hidden sm:inline">Full access: harvest, sale, spoilage, transaction log, per-crop reset, add crop, delete &amp; backup tools.</span>
+                <span id="role-desc" class="text-emerald-50 hidden sm:inline">Full access: harvest, sale, spoilage, GCash verification, transaction log &amp; backup tools.</span>
             </div>
             <div class="flex items-center gap-2">
                 <button type="button" id="btn-switch-user" onclick="switchToUserRole()" class="min-h-[36px] px-3 py-1 rounded-lg bg-sky-500/25 hover:bg-sky-500/35 active:bg-sky-500/45 text-sky-100 border border-sky-300/40 font-semibold transition cursor-pointer inline-flex items-center gap-1.5">
@@ -807,7 +964,7 @@
                 </button>
                 <button type="button" id="btn-admin-pw-settings" onclick="openAdminPasswordSettingsModal()" class="admin-only-control min-h-[36px] px-3 py-1 rounded-lg bg-amber-400/20 hover:bg-amber-400/30 text-amber-100 border border-amber-300/50 font-semibold transition cursor-pointer inline-flex items-center gap-1.5">
                     <i data-lucide="settings" class="w-3.5 h-3.5 text-amber-200"></i>
-                    <span>Password Settings</span>
+                    <span>Settings</span>
                 </button>
             </div>
         </div>
@@ -816,6 +973,7 @@
     <script>
         const ROLE_STORAGE_KEY = 'tylers_farm_active_role_v1';
         const ADMIN_PASSWORD_STORAGE_KEY = 'tylers_farm_admin_password_v1';
+        const GCASH_INFO_STORAGE_KEY = 'tylers_farm_gcash_info_v1';
         const DEFAULT_ADMIN_PIN = '1234';
         let activeRole = 'user';
 
@@ -833,9 +991,30 @@
         let cloudSyncReady = false;
         let unsubscribeCrops = null;
         let unsubscribeTransactions = null;
+        let unsubscribeRemittances = null;
+        let unsubscribeSettings = null;
         let isApplyingRemoteSnapshot = false;
         let hasInitialCropsSnapshot = false;
         let hasInitialTxSnapshot = false;
+        let hasInitialRemitSnapshot = false;
+
+        const STORAGE_KEYS = {
+            CROPS: 'tylers_farm_crops_v1',
+            TRANSACTIONS: 'tylers_farm_tx_v1',
+            REMITTANCES: 'tylers_farm_remit_v1'
+        };
+
+        const DEFAULT_CROPS = [
+            { id: 'crop-atsal', name: 'Bell Pepper (Atsal)', defaultPrice: 120.00, lowStockThreshold: 15 },
+            { id: 'crop-pakwan', name: 'Watermelon (Pakwan)', defaultPrice: 35.00, lowStockThreshold: 50 },
+            { id: 'crop-talong', name: 'Eggplant (Talong)', defaultPrice: 55.00, lowStockThreshold: 20 }
+        ];
+
+        let crops = [];
+        let transactions = [];
+        let remittances = [];
+        let gcashInfo = { accountName: 'Danilo Darantinao', accountNumber: '' };
+        let confirmCallback = null;
 
         function setLiveSyncStatus(state, text) {
             const badge = document.getElementById('live-sync-badge');
@@ -868,9 +1047,7 @@
                 }
 
                 if (cloudSyncReady && db && typeof db.enablePersistence === 'function') {
-                    db.enablePersistence({ synchronizeTabs: true }).catch(() => {
-                        // Ignore multi-tab or unsupported browser persistence error
-                    });
+                    db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
                 }
 
                 if (!cloudSyncReady) {
@@ -888,16 +1065,15 @@
 
             if (typeof unsubscribeCrops === 'function') unsubscribeCrops();
             if (typeof unsubscribeTransactions === 'function') unsubscribeTransactions();
+            if (typeof unsubscribeRemittances === 'function') unsubscribeRemittances();
+            if (typeof unsubscribeSettings === 'function') unsubscribeSettings();
 
             setLiveSyncStatus('syncing', 'Live Sync: Connecting...');
 
             unsubscribeCrops = db.collection("crops").onSnapshot((snap) => {
                 isApplyingRemoteSnapshot = true;
                 try {
-                    const cloudCrops = snap.docs
-                        .map(doc => doc.data())
-                        .filter(c => c && c.id && c.name);
-
+                    const cloudCrops = snap.docs.map(doc => doc.data()).filter(c => c && c.id && c.name);
                     if (cloudCrops.length > 0) {
                         crops = cloudCrops;
                         safeSetStorage(STORAGE_KEYS.CROPS, JSON.stringify(crops));
@@ -907,27 +1083,17 @@
                     } else if (!hasInitialCropsSnapshot && crops.length > 0 && navigator.onLine) {
                         pushCropsToCloud();
                     }
-
                     hasInitialCropsSnapshot = true;
-                    const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
                     setLiveSyncStatus('live', 'Live Sync: Active');
-                    const statusLabel = document.getElementById("last-updated-label");
-                    if (statusLabel) statusLabel.textContent = `Live synced ${now}`;
                 } finally {
                     isApplyingRemoteSnapshot = false;
                 }
-            }, (err) => {
-                console.error("Realtime crops listener error:", err);
-                setLiveSyncStatus('offline', 'Live Sync: Reconnecting...');
-            });
+            }, () => setLiveSyncStatus('offline', 'Live Sync: Reconnecting...'));
 
             unsubscribeTransactions = db.collection("transactions").onSnapshot((snap) => {
                 isApplyingRemoteSnapshot = true;
                 try {
-                    const cloudTx = snap.docs
-                        .map(doc => doc.data())
-                        .filter(tx => tx && tx.id && tx.type);
-
+                    const cloudTx = snap.docs.map(doc => doc.data()).filter(tx => tx && tx.id && tx.type);
                     const hadTxBefore = transactions.length > 0;
                     const prevCount = transactions.length;
 
@@ -946,14 +1112,45 @@
                             showToast('Inventory updated live from cloud.', 'success');
                         }
                     }
-
                     hasInitialTxSnapshot = true;
                 } finally {
                     isApplyingRemoteSnapshot = false;
                 }
-            }, (err) => {
-                console.error("Realtime transactions listener error:", err);
-                setLiveSyncStatus('offline', 'Live Sync: Reconnecting...');
+            }, () => setLiveSyncStatus('offline', 'Live Sync: Reconnecting...'));
+
+            unsubscribeRemittances = db.collection("remittances").onSnapshot((snap) => {
+                isApplyingRemoteSnapshot = true;
+                try {
+                    const cloudRemits = snap.docs.map(doc => doc.data()).filter(r => r && r.id);
+                    const prevCount = remittances.length;
+                    remittances = cloudRemits;
+                    safeSetStorage(STORAGE_KEYS.REMITTANCES, JSON.stringify(remittances));
+                    renderAll();
+
+                    if (hasInitialRemitSnapshot && !snap.metadata.hasPendingWrites && snap.docChanges().length > 0 && prevCount !== cloudRemits.length) {
+                        const hasRemoteChange = snap.docChanges().some(ch => ch.doc.metadata.fromCache === false);
+                        if (hasRemoteChange) {
+                            showToast('GCash remittance updated live!', 'success');
+                        }
+                    }
+                    hasInitialRemitSnapshot = true;
+                } finally {
+                    isApplyingRemoteSnapshot = false;
+                }
+            });
+
+            unsubscribeSettings = db.collection("farm_settings").doc("gcash").onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    if (data) {
+                        gcashInfo = {
+                            accountName: data.accountName || 'Danilo Darantinao',
+                            accountNumber: data.accountNumber || ''
+                        };
+                        safeSetStorage(GCASH_INFO_STORAGE_KEY, JSON.stringify(gcashInfo));
+                        updateGCashBannerDisplay();
+                    }
+                }
             });
         }
 
@@ -963,13 +1160,10 @@
                 const batch = db.batch();
                 crops.forEach(crop => {
                     if (!crop || !crop.id) return;
-                    const ref = db.collection("crops").doc(crop.id);
-                    batch.set(ref, crop, { merge: true });
+                    batch.set(db.collection("crops").doc(crop.id), crop, { merge: true });
                 });
                 await batch.commit();
-            } catch (err) {
-                console.error("Cloud crop sync error:", err);
-            }
+            } catch (err) { console.error(err); }
         }
 
         async function pushTransactionsToCloud() {
@@ -978,8 +1172,7 @@
                 const batch = db.batch();
                 transactions.forEach(tx => {
                     if (!tx || !tx.id) return;
-                    const ref = db.collection("transactions").doc(tx.id);
-                    batch.set(ref, tx, { merge: true });
+                    batch.set(db.collection("transactions").doc(tx.id), tx, { merge: true });
                 });
                 await batch.commit();
                 const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
@@ -987,31 +1180,58 @@
                 const label = document.getElementById("last-updated-label");
                 if (label) label.textContent = `Live synced ${now}`;
             } catch (err) {
-                console.error("Cloud tx sync error:", err);
                 setLiveSyncStatus('offline', 'Live Sync: Queued');
             }
         }
 
+        async function pushRemittancesToCloud() {
+            if (!cloudSyncReady || !db || isApplyingRemoteSnapshot) return;
+            try {
+                const batch = db.batch();
+                remittances.forEach(remit => {
+                    if (!remit || !remit.id) return;
+                    batch.set(db.collection("remittances").doc(remit.id), remit, { merge: true });
+                });
+                await batch.commit();
+                setLiveSyncStatus('live', 'Live Sync: Active');
+            } catch (err) {
+                setLiveSyncStatus('offline', 'Live Sync: Queued');
+            }
+        }
+
+        async function pushGCashSettingsToCloud() {
+            if (!cloudSyncReady || !db) return;
+            try {
+                await db.collection("farm_settings").doc("gcash").set(gcashInfo, { merge: true });
+            } catch (err) { console.error(err); }
+        }
+
         async function deleteTransactionFromCloud(txId) {
             if (!cloudSyncReady || !db || !txId) return;
-            try {
-                await db.collection("transactions").doc(txId).delete();
-            } catch (err) {
-                console.error("Cloud delete tx error:", err);
-            }
+            try { await db.collection("transactions").doc(txId).delete(); } catch (err) {}
+        }
+
+        async function deleteRemittanceFromCloud(remitId) {
+            if (!cloudSyncReady || !db || !remitId) return;
+            try { await db.collection("remittances").doc(remitId).delete(); } catch (err) {}
         }
 
         async function deleteTxIdsFromCloud(txIds) {
             if (!cloudSyncReady || !db || !Array.isArray(txIds) || txIds.length === 0) return;
             try {
                 const batch = db.batch();
-                txIds.forEach(id => {
-                    batch.delete(db.collection("transactions").doc(id));
-                });
+                txIds.forEach(id => batch.delete(db.collection("transactions").doc(id)));
                 await batch.commit();
-            } catch (err) {
-                console.error("Cloud batch delete tx error:", err);
-            }
+            } catch (err) {}
+        }
+
+        async function deleteRemitIdsFromCloud(remitIds) {
+            if (!cloudSyncReady || !db || !Array.isArray(remitIds) || remitIds.length === 0) return;
+            try {
+                const batch = db.batch();
+                remitIds.forEach(id => batch.delete(db.collection("remittances").doc(id)));
+                await batch.commit();
+            } catch (err) {}
         }
 
         function getAdminPassword() {
@@ -1030,7 +1250,6 @@
 
         function applyRolePermissions() {
             const isAdmin = activeRole === 'admin';
-
             const pill = document.getElementById('role-pill');
             const label = document.getElementById('role-label');
             const desc = document.getElementById('role-desc');
@@ -1041,20 +1260,19 @@
                 pill.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold text-[11px] bg-emerald-500/25 text-emerald-100 border border-emerald-300/50';
                 label.textContent = 'ADMIN MODE';
                 desc.className = 'text-emerald-50 hidden sm:inline';
-                desc.textContent = 'Full access: harvest, sale, spoilage, transaction log, per-crop reset, add crop, delete & backup tools.';
+                desc.textContent = 'Full access: harvest, sale, spoilage, GCash verification, transaction log & backup tools.';
                 btnUser.classList.remove('hidden');
                 btnAdmin.classList.add('hidden');
             } else {
                 pill.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold text-[11px] bg-sky-500/25 text-sky-100 border border-sky-300/50';
                 label.textContent = 'USER MODE';
                 desc.className = 'text-sky-50 hidden sm:inline';
-                desc.textContent = 'Standard user access: can record stock movements; transaction log & admin actions locked.';
+                desc.textContent = 'Staff access: record stock movements & log GCash remittances; admin actions locked.';
                 btnUser.classList.add('hidden');
                 btnAdmin.classList.remove('hidden');
             }
 
-            const adminOnlyEls = document.querySelectorAll('.admin-only-control');
-            adminOnlyEls.forEach(el => {
+            document.querySelectorAll('.admin-only-control').forEach(el => {
                 el.classList.toggle('hidden', !isAdmin);
             });
 
@@ -1072,7 +1290,7 @@
             safeSetStorage(ROLE_STORAGE_KEY, 'user');
             applyRolePermissions();
             renderAll();
-            showToast('Switched to User Mode. Transaction log & admin controls are hidden.', 'warning');
+            showToast('Switched to User Mode.', 'warning');
         }
 
         function openAdminModal() {
@@ -1081,9 +1299,7 @@
             const modal = document.getElementById('admin-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
-            setTimeout(() => {
-                input.focus({ preventScroll: true });
-            }, 80);
+            setTimeout(() => input.focus({ preventScroll: true }), 80);
         }
 
         function closeAdminModal() {
@@ -1110,21 +1326,6 @@
             }
         });
 
-        const STORAGE_KEYS = {
-            CROPS: 'tylers_farm_crops_v1',
-            TRANSACTIONS: 'tylers_farm_tx_v1'
-        };
-
-        const DEFAULT_CROPS = [
-            { id: 'crop-atsal', name: 'Bell Pepper (Atsal)', defaultPrice: 120.00, lowStockThreshold: 15 },
-            { id: 'crop-pakwan', name: 'Watermelon (Pakwan)', defaultPrice: 35.00, lowStockThreshold: 50 },
-            { id: 'crop-talong', name: 'Eggplant (Talong)', defaultPrice: 55.00, lowStockThreshold: 20 }
-        ];
-
-        let crops = [];
-        let transactions = [];
-        let confirmCallback = null;
-
         function getLocalTodayDateString() {
             const now = new Date();
             const offsetMs = now.getTimezoneOffset() * 60000;
@@ -1132,29 +1333,46 @@
         }
 
         function safeGetStorage(key) {
-            try {
-                return window.localStorage.getItem(key);
-            } catch (err) {
-                return null;
-            }
+            try { return window.localStorage.getItem(key); } catch (err) { return null; }
         }
 
         function safeSetStorage(key, value) {
-            try {
-                window.localStorage.setItem(key, value);
-                return true;
-            } catch (err) {
-                return false;
+            try { window.localStorage.setItem(key, value); return true; } catch (err) { return false; }
+        }
+
+        function updateGCashBannerDisplay() {
+            const display = document.getElementById('display-gcash-info');
+            if (!display) return;
+            const name = gcashInfo.accountName || 'Danilo Darantinao';
+            const num = gcashInfo.accountNumber ? gcashInfo.accountNumber : 'Set GCash # in Admin Settings';
+            display.textContent = `${name} • ${num}`;
+        }
+
+        function copyGCashNumber() {
+            if (!gcashInfo.accountNumber) {
+                showToast('No GCash number saved yet. Admin can set it in Settings.', 'warning');
+                return;
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(gcashInfo.accountNumber).then(() => {
+                    showToast(`Copied GCash #: ${gcashInfo.accountNumber}`, 'success');
+                }).catch(() => {
+                    showToast(`GCash #: ${gcashInfo.accountNumber}`, 'success');
+                });
+            } else {
+                showToast(`GCash #: ${gcashInfo.accountNumber}`, 'success');
             }
         }
 
         function openAdminPasswordSettingsModal() {
             if (activeRole !== 'admin') {
-                showToast('Admin access required to change admin password.', 'error');
+                showToast('Admin access required.', 'error');
                 return;
             }
             document.getElementById('backup-dropdown').classList.add('hidden');
             document.getElementById('backup-menu-btn').setAttribute('aria-expanded', 'false');
+            document.getElementById('gcash-account-name-input').value = gcashInfo.accountName || '';
+            document.getElementById('gcash-account-number-input').value = gcashInfo.accountNumber || '';
             document.getElementById('current-admin-pw-input').value = '';
             document.getElementById('new-admin-pw-input').value = '';
             document.getElementById('confirm-admin-pw-input').value = '';
@@ -1166,7 +1384,6 @@
             const modal = document.getElementById('admin-password-settings-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
-            setTimeout(() => document.getElementById('current-admin-pw-input').focus(), 50);
             lucide.createIcons();
         }
 
@@ -1187,11 +1404,22 @@
             box.classList.remove('hidden');
         }
 
+        document.getElementById('gcash-settings-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (activeRole !== 'admin') return;
+            gcashInfo = {
+                accountName: document.getElementById('gcash-account-name-input').value.trim() || 'Danilo Darantinao',
+                accountNumber: document.getElementById('gcash-account-number-input').value.trim()
+            };
+            safeSetStorage(GCASH_INFO_STORAGE_KEY, JSON.stringify(gcashInfo));
+            pushGCashSettingsToCloud();
+            updateGCashBannerDisplay();
+            showAdminPwSettingsPopupMessage('GCash receiving account info saved & synced!', false);
+            showToast('GCash info updated!', 'success');
+        });
+
         function resetAdminPasswordToDefault() {
-            if (activeRole !== 'admin') {
-                showToast('Admin access required.', 'error');
-                return;
-            }
+            if (activeRole !== 'admin') return;
             setAdminPassword(DEFAULT_ADMIN_PIN);
             showAdminPwSettingsPopupMessage('Admin password reset to default (1234).', false);
             showToast('Admin password reset to 1234.', 'success');
@@ -1199,27 +1427,21 @@
 
         document.getElementById('admin-password-settings-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            if (activeRole !== 'admin') {
-                showToast('Admin access required.', 'error');
-                return;
-            }
+            if (activeRole !== 'admin') return;
             const currentPw = document.getElementById('current-admin-pw-input').value.trim();
             const newPw = document.getElementById('new-admin-pw-input').value.trim();
             const confirmPw = document.getElementById('confirm-admin-pw-input').value.trim();
 
             if (currentPw !== getAdminPassword()) {
                 showAdminPwSettingsPopupMessage('Sayop ang current admin password!', true);
-                showToast('Current password is incorrect.', 'error');
                 return;
             }
             if (newPw.length < 4) {
                 showAdminPwSettingsPopupMessage('Ang bag-ong password kinahanglan labing menos 4 ka karakter.', true);
-                showToast('New password must be at least 4 characters.', 'error');
                 return;
             }
             if (newPw !== confirmPw) {
                 showAdminPwSettingsPopupMessage('Wala magkapareho ang bag-ong password ug confirm password.', true);
-                showToast('New passwords do not match.', 'error');
                 return;
             }
 
@@ -1232,28 +1454,31 @@
             try {
                 const savedCrops = safeGetStorage(STORAGE_KEYS.CROPS);
                 const savedTx = safeGetStorage(STORAGE_KEYS.TRANSACTIONS);
+                const savedRemits = safeGetStorage(STORAGE_KEYS.REMITTANCES);
+                const savedGCash = safeGetStorage(GCASH_INFO_STORAGE_KEY);
 
                 crops = savedCrops ? JSON.parse(savedCrops) : [...DEFAULT_CROPS];
                 transactions = savedTx ? JSON.parse(savedTx) : [];
+                remittances = savedRemits ? JSON.parse(savedRemits) : [];
+                if (savedGCash) gcashInfo = JSON.parse(savedGCash);
 
-                if (!savedCrops) {
-                    safeSetStorage(STORAGE_KEYS.CROPS, JSON.stringify(crops));
-                }
+                if (!savedCrops) safeSetStorage(STORAGE_KEYS.CROPS, JSON.stringify(crops));
             } catch (err) {
-                console.error('Error loading from localStorage:', err);
                 crops = [...DEFAULT_CROPS];
                 transactions = [];
-                showToast('Private/incognito mode or storage restricted; changes stay in session.', 'warning');
+                remittances = [];
             }
 
             const today = getLocalTodayDateString();
             document.getElementById('harvest-date').value = today;
             document.getElementById('sale-date').value = today;
             document.getElementById('spoilage-date').value = today;
+            document.getElementById('remit-date').value = today;
 
             activeRole = getActiveRole();
             safeSetStorage(ROLE_STORAGE_KEY, activeRole);
             applyRolePermissions();
+            updateGCashBannerDisplay();
 
             populateCropDropdowns();
             autoFillHarvestPrice();
@@ -1268,6 +1493,7 @@
                     startRealtimeCloudSync();
                     pushCropsToCloud();
                     pushTransactionsToCloud();
+                    pushRemittancesToCloud();
                 }
             });
 
@@ -1291,35 +1517,27 @@
                     closeEditTxModal();
                     closeAdminModal();
                     closeResetPasswordModal();
+                    closeGCashVerifyModal();
                     closeConfirmModal();
-                    const menu = document.getElementById('backup-dropdown');
-                    const btn = document.getElementById('backup-menu-btn');
-                    if (menu && !menu.classList.contains('hidden')) {
-                        menu.classList.add('hidden');
-                        if (btn) btn.setAttribute('aria-expanded', 'false');
-                    }
                 }
             });
         }
 
         function saveCrops() {
-            const ok = safeSetStorage(STORAGE_KEYS.CROPS, JSON.stringify(crops));
-            if (!ok) {
-                showToast('Storage full or restricted: crop profile kept for current session.', 'warning');
-            }
+            safeSetStorage(STORAGE_KEYS.CROPS, JSON.stringify(crops));
             pushCropsToCloud();
         }
 
         function saveTransactions() {
             const ok = safeSetStorage(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
             const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            document.getElementById('last-updated-label').textContent = ok
-                ? `Saving live (${now})...`
-                : `Session only (${now})`;
-            if (!ok) {
-                showToast('Storage full or restricted: export CSV/JSON to keep your data.', 'warning');
-            }
+            document.getElementById('last-updated-label').textContent = ok ? `Saving live (${now})...` : `Session only (${now})`;
             pushTransactionsToCloud();
+        }
+
+        function saveRemittances() {
+            safeSetStorage(STORAGE_KEYS.REMITTANCES, JSON.stringify(remittances));
+            pushRemittancesToCloud();
         }
 
         function formatPHP(amount) {
@@ -1344,10 +1562,10 @@
 
         function computeInventorySummary() {
             const stockMap = new Map();
-
             let totalHarvestedKg = 0;
             let totalSoldKg = 0;
             let totalSoldRevenue = 0;
+            let totalPaidSalesRevenue = 0;
             let totalSpoiledKg = 0;
 
             const sortedTx = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -1380,15 +1598,17 @@
                 if (tx.type === 'HARVEST') {
                     entry.harvestedKg += qty;
                     entry.availableKg += qty;
-                    if (tx.unitPrice > 0) {
-                        entry.latestFarmgatePrice = Number(tx.unitPrice);
-                    }
+                    if (tx.unitPrice > 0) entry.latestFarmgatePrice = Number(tx.unitPrice);
                     totalHarvestedKg += qty;
                 } else if (tx.type === 'SALE') {
+                    const saleAmt = qty * (Number(tx.unitPrice) || 0);
                     entry.soldKg += qty;
                     entry.availableKg -= qty;
                     totalSoldKg += qty;
-                    totalSoldRevenue += qty * (Number(tx.unitPrice) || 0);
+                    totalSoldRevenue += saleAmt;
+                    if (!tx.paymentStatus || !tx.paymentStatus.includes('Credit')) {
+                        totalPaidSalesRevenue += saleAmt;
+                    }
                 } else if (tx.type === 'SPOILAGE') {
                     entry.spoiledKg += qty;
                     entry.availableKg -= qty;
@@ -1410,11 +1630,26 @@
                 totalAvailableKg += item.availableKg;
                 totalEstimatedValue += item.estimatedValue;
                 if (item.availableKg > 0) activeBatchCount++;
-
                 return item;
             });
 
             stockList.sort((a, b) => a.cropName.localeCompare(b.cropName) || a.grade.localeCompare(b.grade));
+
+            let totalRemitted = 0;
+            let verifiedRemitted = 0;
+            let pendingVerifyRemitted = 0;
+
+            remittances.forEach(r => {
+                const amt = Number(r.amount) || 0;
+                totalRemitted += amt;
+                if (r.verified) {
+                    verifiedRemitted += amt;
+                } else {
+                    pendingVerifyRemitted += amt;
+                }
+            });
+
+            const unremittedBalance = Math.max(0, totalPaidSalesRevenue - totalRemitted);
 
             return {
                 stockList,
@@ -1424,8 +1659,13 @@
                 totalEstimatedValue,
                 totalSoldKg,
                 totalSoldRevenue,
+                totalPaidSalesRevenue,
                 totalSpoiledKg,
-                activeBatchCount
+                activeBatchCount,
+                totalRemitted,
+                verifiedRemitted,
+                pendingVerifyRemitted,
+                unremittedBalance
             };
         }
 
@@ -1439,6 +1679,12 @@
             document.getElementById('kpi-sold-kg').textContent = `${formatKg(summary.totalSoldKg)} dispatched`;
             document.getElementById('kpi-spoilage-kg').textContent = formatKg(summary.totalSpoiledKg);
 
+            document.getElementById('kpi-remitted-total').textContent = formatPHP(summary.totalRemitted);
+            document.getElementById('kpi-unremitted-balance').textContent = `Unremitted: ${formatPHP(summary.unremittedBalance)}`;
+            document.getElementById('form-unremitted-badge').textContent = formatPHP(summary.unremittedBalance);
+            document.getElementById('remit-verified-total').textContent = formatPHP(summary.verifiedRemitted);
+            document.getElementById('remit-pending-verify-total').textContent = formatPHP(summary.pendingVerifyRemitted);
+
             const spoilageRate = summary.totalHarvestedKg > 0
                 ? ((summary.totalSpoiledKg / summary.totalHarvestedKg) * 100).toFixed(1)
                 : '0.0';
@@ -1446,10 +1692,191 @@
 
             renderStockTable(summary.stockList);
             populateAvailableStockDropdowns(summary.stockList);
+            renderRemittanceTable();
             renderHistoryTable();
             applyRolePermissions();
 
             lucide.createIcons();
+        }
+
+        function renderRemittanceTable() {
+            const tbody = document.getElementById('remittance-table-body');
+            const emptyState = document.getElementById('remittance-empty-state');
+
+            const sorted = [...remittances].sort((a, b) => {
+                const dateDiff = new Date(b.date) - new Date(a.date);
+                return dateDiff !== 0 ? dateDiff : (b.createdAt || 0) - (a.createdAt || 0);
+            });
+
+            if (sorted.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            tbody.innerHTML = sorted.map(r => {
+                const statusBadge = r.verified
+                    ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 whitespace-nowrap"><i data-lucide="badge-check" class="w-3.5 h-3.5"></i> Verified Received</span>`
+                    : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 whitespace-nowrap"><i data-lucide="clock" class="w-3.5 h-3.5"></i> Pending Check</span>`;
+
+                const verifyBtnLabel = r.verified ? 'Unverify' : 'Verify';
+                const verifyBtnClass = r.verified
+                    ? 'text-slate-600 bg-slate-100 hover:bg-slate-200 border-slate-200'
+                    : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-200';
+
+                return `
+                    <tr class="hover:bg-sky-50/40 transition">
+                        <td class="py-3.5 px-4 whitespace-nowrap text-xs font-semibold text-slate-700">${escapeHTML(r.date)}</td>
+                        <td class="py-3 px-3 whitespace-nowrap font-mono text-xs font-bold text-sky-800">${escapeHTML(r.refNo || '—')}</td>
+                        <td class="py-3 px-3 font-semibold text-slate-800">${escapeHTML(r.sender || 'Farm Staff')}</td>
+                        <td class="py-3 px-3 text-right font-extrabold text-sky-700 whitespace-nowrap">${formatPHP(r.amount)}</td>
+                        <td class="py-3 px-4 text-xs text-slate-600">${r.notes ? escapeHTML(r.notes) : '<span class="italic text-slate-400">No remarks</span>'}</td>
+                        <td class="py-3 px-3 text-center">${statusBadge}</td>
+                        <td class="py-3 px-4 text-center admin-only-control no-print">
+                            <div class="inline-flex items-center justify-center gap-1.5">
+                                <button type="button" onclick="toggleVerifyRemittance('${r.id}')" class="min-h-[34px] px-2.5 py-1 rounded-lg text-xs font-semibold border ${verifyBtnClass} transition cursor-pointer">
+                                    ${verifyBtnLabel}
+                                </button>
+                                <button type="button" onclick="confirmDeleteRemittance('${r.id}')" aria-label="Delete remittance" class="min-w-[34px] min-h-[34px] inline-flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer" title="Delete Remittance">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        let pendingGCashVerifyId = null;
+
+        function closeGCashVerifyModal() {
+            const modal = document.getElementById('gcash-verify-modal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            pendingGCashVerifyId = null;
+        }
+
+        function openVerifiedPopUpMessage(titleText, bodyText, isVerifiedNow) {
+            const modal = document.getElementById('gcash-verify-modal');
+            const titleEl = document.getElementById('gcash-verify-modal-title');
+            const msgEl = document.getElementById('gcash-verify-msg');
+            const detailsEl = document.getElementById('gcash-verify-details');
+            const confirmBtn = document.getElementById('gcash-verify-confirm-btn');
+            const iconWrap = document.getElementById('gcash-verify-icon-wrap');
+
+            pendingGCashVerifyId = null;
+            titleEl.textContent = titleText;
+            msgEl.textContent = bodyText;
+            detailsEl.classList.add('hidden');
+            detailsEl.innerHTML = '';
+
+            iconWrap.className = isVerifiedNow
+                ? 'p-2 bg-emerald-50 text-emerald-700 rounded-xl shrink-0'
+                : 'p-2 bg-amber-50 text-amber-700 rounded-xl shrink-0';
+            iconWrap.innerHTML = `<i data-lucide="${isVerifiedNow ? 'check-circle-2' : 'clock'}" class="w-5 h-5"></i>`;
+
+            confirmBtn.textContent = 'OK';
+            confirmBtn.className = 'min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold text-white bg-farm-800 hover:bg-farm-900 transition cursor-pointer';
+            confirmBtn.onclick = closeGCashVerifyModal;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function toggleVerifyRemittance(remitId) {
+            if (activeRole !== 'admin') {
+                showToast('Admin mode required to verify GCash remittances.', 'error');
+                return;
+            }
+            const item = remittances.find(r => r.id === remitId);
+            if (!item) return;
+
+            const willVerify = !item.verified;
+            const modal = document.getElementById('gcash-verify-modal');
+            const titleEl = document.getElementById('gcash-verify-modal-title');
+            const msgEl = document.getElementById('gcash-verify-msg');
+            const detailsEl = document.getElementById('gcash-verify-details');
+            const confirmBtn = document.getElementById('gcash-verify-confirm-btn');
+            const iconWrap = document.getElementById('gcash-verify-icon-wrap');
+
+            pendingGCashVerifyId = remitId;
+            titleEl.textContent = willVerify ? 'Verify GCash Payment?' : 'Revert to Pending Check?';
+            msgEl.textContent = willVerify
+                ? 'Kumpirmahin na natanggap mo na ang bayad na ito sa iyong GCash account.'
+                : 'Ibalik ang status ng remittance na ito sa Pending Check?';
+
+            detailsEl.classList.remove('hidden');
+            detailsEl.innerHTML = `
+                <div><span class="font-semibold text-slate-600">Amount:</span> <span class="font-extrabold text-sky-800">${formatPHP(item.amount)}</span></div>
+                <div><span class="font-semibold text-slate-600">Ref No.:</span> <span class="font-mono font-bold text-slate-800">${escapeHTML(item.refNo || '—')}</span></div>
+                <div><span class="font-semibold text-slate-600">Sent By:</span> <span class="font-semibold text-slate-800">${escapeHTML(item.sender || 'Farm Staff')}</span></div>
+                <div><span class="font-semibold text-slate-600">Date:</span> <span class="text-slate-700">${escapeHTML(item.date || '')}</span></div>
+            `;
+
+            iconWrap.className = willVerify
+                ? 'p-2 bg-emerald-50 text-emerald-700 rounded-xl shrink-0'
+                : 'p-2 bg-amber-50 text-amber-700 rounded-xl shrink-0';
+            iconWrap.innerHTML = `<i data-lucide="${willVerify ? 'badge-check' : 'rotate-ccw'}" class="w-5 h-5"></i>`;
+
+            confirmBtn.textContent = willVerify ? 'Verify Payment' : 'Set Pending';
+            confirmBtn.className = willVerify
+                ? 'min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition cursor-pointer'
+                : 'min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 transition cursor-pointer';
+
+            confirmBtn.onclick = () => {
+                const target = remittances.find(r => r.id === pendingGCashVerifyId);
+                closeGCashVerifyModal();
+                if (!target) return;
+                target.verified = !target.verified;
+                target.verifiedAt = target.verified ? Date.now() : null;
+                saveRemittances();
+                renderAll();
+
+                if (target.verified) {
+                    showToast(`Verified GCash Ref #${target.refNo} (${formatPHP(target.amount)})`, 'success');
+                    openVerifiedPopUpMessage(
+                        'Payment Verified!',
+                        `Na-verify na ang GCash payment na ${formatPHP(target.amount)} (Ref #${target.refNo || '—'}) mula kay ${target.sender || 'Farm Staff'}.`,
+                        true
+                    );
+                } else {
+                    showToast('Marked as pending verification.', 'warning');
+                    openVerifiedPopUpMessage(
+                        'Status Updated to Pending',
+                        `Naibalik sa Pending Check ang GCash remittance na ${formatPHP(target.amount)} (Ref #${target.refNo || '—'}).`,
+                        false
+                    );
+                }
+            };
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function confirmDeleteRemittance(remitId) {
+            if (activeRole !== 'admin') {
+                showToast('Admin access required.', 'error');
+                return;
+            }
+            const item = remittances.find(r => r.id === remitId);
+            if (!item) return;
+            requestPasswordProtectedReset(`Delete GCash Remittance (${formatPHP(item.amount)} - Ref #${item.refNo})`, () => {
+                showConfirm(
+                    'Delete GCash Remittance?',
+                    `Delete remittance of ${formatPHP(item.amount)} (Ref #${item.refNo})?`,
+                    () => {
+                        remittances = remittances.filter(r => r.id !== remitId);
+                        saveRemittances();
+                        deleteRemittanceFromCloud(remitId);
+                        renderAll();
+                        showToast('Remittance entry deleted.', 'success');
+                    }
+                );
+            });
         }
 
         function renderStockTable(stockList) {
@@ -1543,15 +1970,19 @@
                 let financialDisplay = '—';
                 let detailsDisplay = '';
 
+                let rowTintClass = 'hover:bg-slate-50/80';
+
                 if (tx.type === 'HARVEST') {
-                    typeBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-farm-100 text-farm-900"><i data-lucide="arrow-down-left" class="w-3.5 h-3.5"></i> Harvest</span>`;
-                    qtyDisplay = `<span class="font-bold text-farm-800">+${formatKg(tx.qty)}</span>`;
+                    rowTintClass = 'bg-emerald-50/35 hover:bg-emerald-50/75';
+                    typeBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-extrabold tracking-wide bg-emerald-100 text-emerald-900 border border-emerald-300"><i data-lucide="arrow-down-left" class="w-3.5 h-3.5 text-emerald-700"></i> HARVEST</span>`;
+                    qtyDisplay = `<span class="font-extrabold text-emerald-800">+${formatKg(tx.qty)}</span>`;
                     const batchVal = (tx.qty || 0) * (tx.unitPrice || 0);
                     financialDisplay = `<div class="font-semibold text-slate-800">${formatPHP(batchVal)}</div><div class="text-[11px] text-slate-400">Farmgate @ ${formatPHP(tx.unitPrice)}/kg</div>`;
                     detailsDisplay = tx.notes ? `<span class="text-slate-700">${escapeHTML(tx.notes)}</span>` : `<span class="text-slate-400 italic">No batch notes</span>`;
                 } else if (tx.type === 'SALE') {
-                    typeBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-100 text-blue-800"><i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i> Sale</span>`;
-                    qtyDisplay = `<span class="font-bold text-blue-700">-${formatKg(tx.qty)}</span>`;
+                    rowTintClass = 'bg-blue-50/35 hover:bg-blue-50/75';
+                    typeBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-extrabold tracking-wide bg-blue-100 text-blue-900 border border-blue-300"><i data-lucide="arrow-up-right" class="w-3.5 h-3.5 text-blue-700"></i> SALE</span>`;
+                    qtyDisplay = `<span class="font-extrabold text-blue-700">-${formatKg(tx.qty)}</span>`;
                     const saleVal = (tx.qty || 0) * (tx.unitPrice || 0);
                     financialDisplay = `<div class="font-bold text-blue-800">${formatPHP(saleVal)}</div><div class="text-[11px] text-slate-400">Sold @ ${formatPHP(tx.unitPrice)}/kg</div>`;
 
@@ -1563,9 +1994,10 @@
                         <span class="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold rounded border ${payBadgeColor}">${escapeHTML(tx.paymentStatus || 'Paid')}</span>
                     `;
                 } else if (tx.type === 'SPOILAGE') {
-                    typeBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-100 text-rose-800"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Spoilage</span>`;
-                    qtyDisplay = `<span class="font-bold text-rose-600">-${formatKg(tx.qty)}</span>`;
-                    financialDisplay = `<span class="text-xs text-rose-600 font-medium">Shrinkage Loss</span>`;
+                    rowTintClass = 'bg-rose-50/40 hover:bg-rose-50/80';
+                    typeBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-extrabold tracking-wide bg-rose-100 text-rose-900 border border-rose-300"><i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-rose-700"></i> SPOILAGE</span>`;
+                    qtyDisplay = `<span class="font-extrabold text-rose-700">-${formatKg(tx.qty)}</span>`;
+                    financialDisplay = `<span class="text-xs text-rose-700 font-bold">Shrinkage Loss</span>`;
                     detailsDisplay = `
                         <div class="font-semibold text-rose-700">${escapeHTML(tx.reason || 'Damaged')}</div>
                         ${tx.notes ? `<div class="text-xs text-slate-500">${escapeHTML(tx.notes)}</div>` : ''}
@@ -1573,7 +2005,7 @@
                 }
 
                 return `
-                    <tr class="hover:bg-slate-50/80 transition">
+                    <tr class="${rowTintClass} transition">
                         <td class="py-3.5 px-4 whitespace-nowrap text-xs font-semibold text-slate-700">${escapeHTML(tx.date)}</td>
                         <td class="py-3.5 px-3 whitespace-nowrap">${typeBadge}</td>
                         <td class="py-3.5 px-3">
@@ -1643,28 +2075,50 @@
         }
 
         function switchMode(mode) {
-            const tabs = ['harvest', 'sale', 'spoilage'];
+            const tabs = ['harvest', 'sale', 'spoilage', 'remit'];
             const activeStyles = {
-                harvest: ['bg-farm-800', 'text-white', 'shadow-xs'],
-                sale: ['bg-blue-700', 'text-white', 'shadow-xs'],
-                spoilage: ['bg-rose-600', 'text-white', 'shadow-xs']
+                harvest: ['bg-emerald-700', 'text-white', 'shadow-xs', 'ring-2', 'ring-emerald-300'],
+                sale: ['bg-blue-700', 'text-white', 'shadow-xs', 'ring-2', 'ring-blue-300'],
+                spoilage: ['bg-rose-600', 'text-white', 'shadow-xs', 'ring-2', 'ring-rose-300'],
+                remit: ['bg-sky-600', 'text-white', 'shadow-xs', 'ring-2', 'ring-sky-300']
+            };
+            const inactiveStyles = {
+                harvest: ['bg-emerald-50', 'text-emerald-800', 'border', 'border-emerald-200/80', 'hover:bg-emerald-100'],
+                sale: ['bg-blue-50', 'text-blue-700', 'border', 'border-blue-200/80', 'hover:bg-blue-100'],
+                spoilage: ['bg-rose-50', 'text-rose-700', 'border', 'border-rose-200/80', 'hover:bg-rose-100'],
+                remit: ['bg-sky-50', 'text-sky-700', 'border', 'border-sky-200/80', 'hover:bg-sky-100']
             };
 
             tabs.forEach(t => {
                 const btn = document.getElementById(`tab-${t}`);
                 const form = document.getElementById(`form-${t}`);
 
-                btn.className = 'mode-tab min-h-[44px] flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs font-bold transition cursor-pointer';
+                btn.className = 'mode-tab min-h-[42px] flex flex-col sm:flex-row items-center justify-center gap-1 py-2 px-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer';
                 if (t === mode) {
                     btn.setAttribute('aria-selected', 'true');
                     btn.classList.add(...activeStyles[t]);
                     form.classList.remove('hidden');
                 } else {
                     btn.setAttribute('aria-selected', 'false');
-                    btn.classList.add('text-slate-600', 'hover:bg-white');
+                    btn.classList.add(...inactiveStyles[t]);
                     form.classList.add('hidden');
                 }
             });
+        }
+
+        function syncFilterTypeStyle() {
+            const sel = document.getElementById('filter-type');
+            if (!sel) return;
+            const base = 'min-h-[44px] px-3 py-2 rounded-xl border font-bold outline-none transition ';
+            if (sel.value === 'HARVEST') {
+                sel.className = base + 'border-emerald-300 bg-emerald-50 text-emerald-900 focus:border-emerald-600';
+            } else if (sel.value === 'SALE') {
+                sel.className = base + 'border-blue-300 bg-blue-50 text-blue-900 focus:border-blue-600';
+            } else if (sel.value === 'SPOILAGE') {
+                sel.className = base + 'border-rose-300 bg-rose-50 text-rose-900 focus:border-rose-600';
+            } else {
+                sel.className = base + 'border-slate-200 bg-white text-slate-700 focus:border-farm-600';
+            }
         }
 
         function autoFillHarvestPrice() {
@@ -1849,6 +2303,39 @@
             showToast(`Logged ${formatKg(qty)} spoilage for ${item.cropName}.`, 'warning');
         });
 
+        document.getElementById('form-remit').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const date = document.getElementById('remit-date').value;
+            const amount = parseFloat(document.getElementById('remit-amount').value);
+            const refNo = document.getElementById('remit-ref').value.trim();
+            const sender = document.getElementById('remit-sender').value.trim();
+            const notes = document.getElementById('remit-notes').value.trim();
+
+            if (isNaN(amount) || amount <= 0 || !refNo) {
+                showToast('Please enter a valid amount and GCash Reference No.', 'error');
+                return;
+            }
+
+            remittances.push({
+                id: 'remit-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+                date,
+                amount: Math.round(amount * 100) / 100,
+                refNo,
+                sender,
+                notes,
+                verified: false,
+                createdAt: Date.now()
+            });
+
+            saveRemittances();
+            renderAll();
+
+            document.getElementById('remit-amount').value = '';
+            document.getElementById('remit-ref').value = '';
+            document.getElementById('remit-notes').value = '';
+            showToast(`GCash remittance of ${formatPHP(amount)} (Ref #${refNo}) logged!`, 'success');
+        });
+
         function openCropModal() {
             document.getElementById('backup-dropdown').classList.add('hidden');
             document.getElementById('backup-menu-btn').setAttribute('aria-expanded', 'false');
@@ -1872,19 +2359,12 @@
 
             if (!name) return;
 
-            const exists = crops.some(c => c.name.toLowerCase() === name.toLowerCase());
-            if (exists) {
+            if (crops.some(c => c.name.toLowerCase() === name.toLowerCase())) {
                 showToast('This crop already exists in your list.', 'error');
                 return;
             }
 
-            const newCrop = {
-                id: 'crop-' + Date.now(),
-                name,
-                defaultPrice,
-                lowStockThreshold
-            };
-
+            const newCrop = { id: 'crop-' + Date.now(), name, defaultPrice, lowStockThreshold };
             crops.push(newCrop);
             saveCrops();
             populateCropDropdowns();
@@ -1893,8 +2373,6 @@
 
             document.getElementById('custom-crop-form').reset();
             closeCropModal();
-            closeAdminPasswordSettingsModal();
-            closeEditTxModal();
             showToast(`Added "${name}" to Tyler's Farm crop profiles.`, 'success');
         });
 
@@ -1918,9 +2396,7 @@
 
         document.getElementById('confirm-cancel-btn').addEventListener('click', closeConfirmModal);
         document.getElementById('confirm-ok-btn').addEventListener('click', () => {
-            if (typeof confirmCallback === 'function') {
-                confirmCallback();
-            }
+            if (typeof confirmCallback === 'function') confirmCallback();
             closeConfirmModal();
         });
 
@@ -1945,13 +2421,13 @@
 
         function requestPasswordProtectedReset(targetLabel, onAuthorized) {
             if (activeRole !== 'admin') {
-                showToast('Admin access required to reset crop records.', 'error');
+                showToast('Admin access required.', 'error');
                 return;
             }
             pendingResetAction = onAuthorized;
             document.getElementById('reset-password-target-label').textContent = `Target: ${targetLabel}`;
             document.getElementById('reset-password-input').value = '';
-            showResetPopupMessage('Password-protected pop-up: Enter password to continue reset.', false);
+            showResetPopupMessage('Enter Admin password to continue.', false);
             const modal = document.getElementById('reset-password-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -1972,44 +2448,34 @@
             const entered = document.getElementById('reset-password-input').value.trim();
             if (entered !== getAdminPassword()) {
                 showResetPopupMessage('Sayop nga password! Palihug sulayi pag-usab.', true);
-                showToast('Incorrect password. Reset cancelled.', 'error');
                 return;
             }
             const action = pendingResetAction;
             closeResetPasswordModal();
             closeEditTxModal();
-            if (typeof action === 'function') {
-                action();
-            }
+            if (typeof action === 'function') action();
         });
 
         function confirmResetCrop(cropId, cropName) {
-            if (activeRole !== 'admin') {
-                showToast('Admin access required to reset crop records.', 'error');
-                return;
-            }
+            if (activeRole !== 'admin') return;
             requestPasswordProtectedReset(`Records for ${cropName}`, () => {
                 showConfirm(
                     `Reset ${cropName} records`,
-                    `Password verified. Choose whether to delete Class A only, Class B only, or ALL grades for ${cropName}. Other crops and original settings stay untouched.`,
+                    `Password verified. Choose whether to delete Class A only, Class B only, or ALL grades for ${cropName}.`,
                     () => {
                         const selectedGrade = document.getElementById('reset-grade-select').value;
                         let removedIds = [];
                         if (selectedGrade === 'ALL') {
                             removedIds = transactions.filter(t => t.cropId === cropId).map(t => t.id);
                             transactions = transactions.filter(t => t.cropId !== cropId);
-                            saveTransactions();
-                            deleteTxIdsFromCloud(removedIds);
-                            renderAll();
-                            showToast(`Reset all grades for ${cropName}.`, 'success');
                         } else {
                             removedIds = transactions.filter(t => t.cropId === cropId && t.grade === selectedGrade).map(t => t.id);
                             transactions = transactions.filter(t => !(t.cropId === cropId && t.grade === selectedGrade));
-                            saveTransactions();
-                            deleteTxIdsFromCloud(removedIds);
-                            renderAll();
-                            showToast(`Deleted ${selectedGrade} records for ${cropName}.`, 'success');
                         }
+                        saveTransactions();
+                        deleteTxIdsFromCloud(removedIds);
+                        renderAll();
+                        showToast(`Reset completed for ${cropName}.`, 'success');
                     }
                 );
                 document.getElementById('reset-grade-picker').classList.remove('hidden');
@@ -2018,10 +2484,7 @@
         }
 
         function openEditTransactionModal(txId) {
-            if (activeRole !== 'admin') {
-                showToast('Admin access required to edit transactions.', 'error');
-                return;
-            }
+            if (activeRole !== 'admin') return;
             const tx = transactions.find(t => t.id === txId);
             if (!tx) return;
             requestPasswordProtectedReset(`Edit: ${formatKg(tx.qty)} ${tx.cropName} (${tx.type})`, () => {
@@ -2030,10 +2493,6 @@
         }
 
         function proceedOpenEditTransactionModal(txId) {
-            if (activeRole !== 'admin') {
-                showToast('Admin access required to edit transactions.', 'error');
-                return;
-            }
             const tx = transactions.find(t => t.id === txId);
             if (!tx) return;
 
@@ -2080,19 +2539,13 @@
 
         document.getElementById('edit-tx-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            if (activeRole !== 'admin') {
-                showToast('Admin access required to save edits.', 'error');
-                return;
-            }
+            if (activeRole !== 'admin') return;
             const txId = document.getElementById('edit-tx-id').value;
             const tx = transactions.find(t => t.id === txId);
             if (!tx) return;
 
             const newQty = parseFloat(document.getElementById('edit-tx-qty').value);
-            if (isNaN(newQty) || newQty <= 0) {
-                showToast('Please enter a valid weight.', 'error');
-                return;
-            }
+            if (isNaN(newQty) || newQty <= 0) return;
 
             tx.date = document.getElementById('edit-tx-date').value;
             tx.grade = document.getElementById('edit-tx-grade').value;
@@ -2117,23 +2570,20 @@
         });
 
         function confirmDeleteTransaction(txId) {
-            if (activeRole !== 'admin') {
-                showToast('Admin access required to delete transactions.', 'error');
-                return;
-            }
+            if (activeRole !== 'admin') return;
             const tx = transactions.find(t => t.id === txId);
             if (!tx) return;
 
             requestPasswordProtectedReset(`Delete: ${formatKg(tx.qty)} ${tx.cropName} (${tx.type})`, () => {
                 showConfirm(
                     'Delete Transaction Entry?',
-                    `Are you sure you want to delete this ${tx.type.toLowerCase()} record (${formatKg(tx.qty)} ${tx.cropName})? Stock balances will automatically recalculate.`,
+                    `Are you sure you want to delete this ${tx.type.toLowerCase()} record (${formatKg(tx.qty)} ${tx.cropName})?`,
                     () => {
                         transactions = transactions.filter(t => t.id !== txId);
                         saveTransactions();
                         deleteTransactionFromCloud(txId);
                         renderAll();
-                        showToast('Transaction deleted and stock recalculated.', 'success');
+                        showToast('Transaction deleted.', 'success');
                     }
                 );
             });
@@ -2155,7 +2605,6 @@
             link.style.display = 'none';
             document.body.appendChild(link);
             link.click();
-
             setTimeout(() => {
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
@@ -2163,16 +2612,13 @@
         }
 
         function exportCSV() {
-            document.getElementById('backup-dropdown').classList.add('hidden');
-            document.getElementById('backup-menu-btn').setAttribute('aria-expanded', 'false');
-
-            if (transactions.length === 0) {
-                showToast('No transactions available to export.', 'error');
+            if (transactions.length === 0 && remittances.length === 0) {
+                showToast('No records available to export.', 'error');
                 return;
             }
 
-            const headers = ['Date', 'Type', 'Crop', 'Grade', 'Weight_kg', 'Unit_Price_PHP', 'Total_Amount_PHP', 'Buyer_or_Reason', 'Payment_Status', 'Notes'];
-            const rows = transactions.map(tx => {
+            const headers = ['Date', 'Type', 'Crop_or_RefNo', 'Grade_or_Sender', 'Weight_kg', 'Unit_Price_PHP', 'Total_Amount_PHP', 'Buyer_or_Reason', 'Status', 'Notes'];
+            const txRows = transactions.map(tx => {
                 const total = tx.type === 'SPOILAGE' ? 0 : (tx.qty * (tx.unitPrice || 0)).toFixed(2);
                 const buyerOrReason = tx.type === 'SALE' ? (tx.buyer || '') : (tx.reason || '');
                 return [
@@ -2189,42 +2635,40 @@
                 ].join(',');
             });
 
-            const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n');
-            const dateStr = getLocalTodayDateString();
-            triggerMobileFriendlyDownload(
-                csvContent,
-                'text/csv;charset=utf-8;',
-                `Tylers_Integrated_Farm_Inventory_${dateStr}.csv`
-            );
+            const remitRows = remittances.map(r => [
+                r.date,
+                'GCASH_REMITTANCE',
+                `"Ref: ${(r.refNo || '').replace(/"/g, '""')}"`,
+                `"${(r.sender || '').replace(/"/g, '""')}"`,
+                0,
+                0,
+                (Number(r.amount) || 0).toFixed(2),
+                'GCash Remittance',
+                r.verified ? 'Verified' : 'Pending Verification',
+                `"${(r.notes || '').replace(/"/g, '""')}"`
+            ].join(','));
 
-            showToast('CSV export started. Check Files or Downloads.', 'success');
+            const csvContent = '\uFEFF' + [headers.join(','), ...txRows, ...remitRows].join('\n');
+            triggerMobileFriendlyDownload(csvContent, 'text/csv;charset=utf-8;', `Tylers_Farm_Inventory_Remittance_${getLocalTodayDateString()}.csv`);
+            showToast('CSV export started.', 'success');
         }
 
         function exportJSON() {
             document.getElementById('backup-dropdown').classList.add('hidden');
-            document.getElementById('backup-menu-btn').setAttribute('aria-expanded', 'false');
-
             const payload = {
                 farm: "Tyler's Integrated Farm",
                 exportedAt: new Date().toISOString(),
+                gcashInfo,
                 crops,
-                transactions
+                transactions,
+                remittances
             };
-
-            const dateStr = getLocalTodayDateString();
-            triggerMobileFriendlyDownload(
-                JSON.stringify(payload, null, 2),
-                'application/json;charset=utf-8;',
-                `Tylers_Farm_Backup_${dateStr}.json`
-            );
-
+            triggerMobileFriendlyDownload(JSON.stringify(payload, null, 2), 'application/json;charset=utf-8;', `Tylers_Farm_Backup_${getLocalTodayDateString()}.json`);
             showToast('JSON backup export started.', 'success');
         }
 
         function importJSON(event) {
             document.getElementById('backup-dropdown').classList.add('hidden');
-            document.getElementById('backup-menu-btn').setAttribute('aria-expanded', 'false');
-
             const file = event.target.files && event.target.files[0];
             if (!file) return;
 
@@ -2232,13 +2676,19 @@
             reader.onload = function(e) {
                 try {
                     const data = JSON.parse(e.target.result);
-                    if (!Array.isArray(data.crops) || !Array.isArray(data.transactions)) {
-                        throw new Error('Invalid backup format');
-                    }
+                    if (!Array.isArray(data.crops) || !Array.isArray(data.transactions)) throw new Error('Invalid');
                     crops = data.crops;
                     transactions = data.transactions;
+                    remittances = Array.isArray(data.remittances) ? data.remittances : [];
+                    if (data.gcashInfo) {
+                        gcashInfo = data.gcashInfo;
+                        safeSetStorage(GCASH_INFO_STORAGE_KEY, JSON.stringify(gcashInfo));
+                        pushGCashSettingsToCloud();
+                        updateGCashBannerDisplay();
+                    }
                     saveCrops();
                     saveTransactions();
+                    saveRemittances();
                     populateCropDropdowns();
                     autoFillHarvestPrice();
                     renderAll();
@@ -2248,19 +2698,14 @@
                 }
                 event.target.value = '';
             };
-            reader.onerror = function() {
-                showToast('Unable to read selected file on this device.', 'error');
-                event.target.value = '';
-            };
             reader.readAsText(file);
         }
 
         function confirmLoadSample() {
             document.getElementById('backup-dropdown').classList.add('hidden');
-            document.getElementById('backup-menu-btn').setAttribute('aria-expanded', 'false');
             showConfirm(
-                'Load Sample Harvest Data?',
-                'This will replace current records with realistic sample harvest, sale, and spoilage entries for Atsal, Pakwan, and Talong.',
+                'Load Sample Harvest & Remittance Data?',
+                'This will replace current records with sample entries for Atsal, Pakwan, Talong, and a sample GCash remittance.',
                 loadSampleData
             );
         }
@@ -2276,64 +2721,40 @@
 
             crops = [...DEFAULT_CROPS];
             transactions = [
-                {
-                    id: 'sample-1', type: 'HARVEST', date: fmtDate(3),
-                    cropId: 'crop-atsal', cropName: 'Bell Pepper (Atsal)', grade: 'Class A (Good)',
-                    qty: 65.0, unitPrice: 120.00, notes: 'Greenhouse 1 - First picking', createdAt: Date.now() - 500000
-                },
-                {
-                    id: 'sample-2', type: 'HARVEST', date: fmtDate(3),
-                    cropId: 'crop-atsal', cropName: 'Bell Pepper (Atsal)', grade: 'Class B (Second)',
-                    qty: 18.5, unitPrice: 80.00, notes: 'Smaller fruits from Greenhouse 1', createdAt: Date.now() - 490000
-                },
-                {
-                    id: 'sample-3', type: 'HARVEST', date: fmtDate(2),
-                    cropId: 'crop-pakwan', cropName: 'Watermelon (Pakwan)', grade: 'Class A (Good)',
-                    qty: 240.0, unitPrice: 35.00, notes: 'Open Field Block A (48 pcs avg 5kg)', createdAt: Date.now() - 400000
-                },
-                {
-                    id: 'sample-4', type: 'HARVEST', date: fmtDate(1),
-                    cropId: 'crop-talong', cropName: 'Eggplant (Talong)', grade: 'Class A (Good)',
-                    qty: 85.0, unitPrice: 55.00, notes: 'Plot 3 - Morning harvest', createdAt: Date.now() - 300000
-                },
-                {
-                    id: 'sample-5', type: 'SALE', date: fmtDate(1),
-                    cropId: 'crop-pakwan', cropName: 'Watermelon (Pakwan)', grade: 'Class A (Good)',
-                    qty: 150.0, unitPrice: 42.00, buyer: 'Ormoc Public Market Wholesaler', paymentStatus: 'Paid (Cash)', createdAt: Date.now() - 200000
-                },
-                {
-                    id: 'sample-6', type: 'SALE', date: fmtDate(0),
-                    cropId: 'crop-atsal', cropName: 'Bell Pepper (Atsal)', grade: 'Class A (Good)',
-                    qty: 40.0, unitPrice: 140.00, buyer: 'Baybay City Trading', paymentStatus: 'Paid (GCash / Bank)', createdAt: Date.now() - 100000
-                },
-                {
-                    id: 'sample-7', type: 'SPOILAGE', date: fmtDate(0),
-                    cropId: 'crop-talong', cropName: 'Eggplant (Talong)', grade: 'Class A (Good)',
-                    qty: 4.5, reason: 'Pest / Insect Damage', notes: 'Fruit borer damage sorted out during packing', createdAt: Date.now() - 50000
-                }
+                { id: 'sample-1', type: 'HARVEST', date: fmtDate(3), cropId: 'crop-atsal', cropName: 'Bell Pepper (Atsal)', grade: 'Class A (Good)', qty: 65.0, unitPrice: 120.00, notes: 'Greenhouse 1 - First picking', createdAt: Date.now() - 500000 },
+                { id: 'sample-3', type: 'HARVEST', date: fmtDate(2), cropId: 'crop-pakwan', cropName: 'Watermelon (Pakwan)', grade: 'Class A (Good)', qty: 240.0, unitPrice: 35.00, notes: 'Open Field Block A', createdAt: Date.now() - 400000 },
+                { id: 'sample-5', type: 'SALE', date: fmtDate(1), cropId: 'crop-pakwan', cropName: 'Watermelon (Pakwan)', grade: 'Class A (Good)', qty: 150.0, unitPrice: 42.00, buyer: 'Ormoc Public Market Wholesaler', paymentStatus: 'Paid (Cash)', createdAt: Date.now() - 200000 },
+                { id: 'sample-6', type: 'SALE', date: fmtDate(0), cropId: 'crop-atsal', cropName: 'Bell Pepper (Atsal)', grade: 'Class A (Good)', qty: 40.0, unitPrice: 140.00, buyer: 'Baybay City Trading', paymentStatus: 'Paid (GCash / Bank)', createdAt: Date.now() - 100000 }
+            ];
+            remittances = [
+                { id: 'sample-remit-1', date: fmtDate(0), amount: 8000.00, refNo: '8024 918 331209', sender: 'Kuya Jun (Farm Caretaker)', notes: 'Partial remittance from Pakwan & Atsal sales', verified: true, createdAt: Date.now() - 50000 }
             ];
 
             saveCrops();
             saveTransactions();
+            saveRemittances();
             populateCropDropdowns();
             autoFillHarvestPrice();
             renderAll();
-            showToast('Sample farm inventory loaded!', 'success');
+            showToast('Sample farm inventory & remittance loaded!', 'success');
         }
 
         function confirmResetAll() {
             document.getElementById('backup-dropdown').classList.add('hidden');
-            document.getElementById('backup-menu-btn').setAttribute('aria-expanded', 'false');
             showConfirm(
                 'Reset All Farm Records?',
-                'This will permanently delete all harvest, sales, and spoilage logs stored on this device. Make sure you have exported a CSV or JSON backup first.',
+                'This will permanently delete all harvest, sales, spoilage, and GCash remittance logs. Export a backup first.',
                 () => {
-                    const removedIds = transactions.map(t => t.id);
+                    const removedTxIds = transactions.map(t => t.id);
+                    const removedRemitIds = remittances.map(r => r.id);
                     transactions = [];
+                    remittances = [];
                     crops = [...DEFAULT_CROPS];
                     saveCrops();
                     saveTransactions();
-                    deleteTxIdsFromCloud(removedIds);
+                    saveRemittances();
+                    deleteTxIdsFromCloud(removedTxIds);
+                    deleteRemitIdsFromCloud(removedRemitIds);
                     populateCropDropdowns();
                     autoFillHarvestPrice();
                     renderAll();
@@ -2345,32 +2766,19 @@
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-
             const styles = {
                 success: 'bg-farm-900 text-white border-farm-700',
                 error: 'bg-rose-700 text-white border-rose-600',
                 warning: 'bg-amber-600 text-white border-amber-500'
             };
-
-            const icons = {
-                success: 'check-circle-2',
-                error: 'x-circle',
-                warning: 'alert-triangle'
-            };
+            const icons = { success: 'check-circle-2', error: 'x-circle', warning: 'alert-triangle' };
 
             toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border text-xs font-semibold transform transition-all duration-300 translate-y-2 opacity-0 ${styles[type] || styles.success}`;
-            toast.innerHTML = `
-                <i data-lucide="${icons[type] || 'info'}" class="w-4 h-4 shrink-0"></i>
-                <span class="flex-1">${escapeHTML(message)}</span>
-            `;
+            toast.innerHTML = `<i data-lucide="${icons[type] || 'info'}" class="w-4 h-4 shrink-0"></i><span class="flex-1">${escapeHTML(message)}</span>`;
 
             container.appendChild(toast);
             lucide.createIcons();
-
-            requestAnimationFrame(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            });
-
+            requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
             setTimeout(() => {
                 toast.classList.add('opacity-0', 'translate-y-2');
                 setTimeout(() => toast.remove(), 300);
