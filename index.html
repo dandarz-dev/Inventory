@@ -376,6 +376,10 @@
                     <div>
                         <div class="flex items-center gap-2 flex-wrap">
                             <h1 class="text-lg sm:text-2xl font-extrabold tracking-tight text-white">Tyler's Integrated Farm</h1>
+                            <span id="live-sync-badge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-400/20 text-emerald-100 border border-emerald-300/40">
+                                <span id="live-sync-dot" class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
+                                <span id="live-sync-text">Live Sync: Connecting...</span>
+                            </span>
                         </div>
                         <p class="text-xs sm:text-sm text-emerald-100/80 mt-0.5">Vegetable Harvest, Stock &amp; Dispatch Inventory System</p>
                     </div>
@@ -674,7 +678,7 @@
                         </h3>
                         <p class="text-xs text-slate-500 mt-0.5">Real-time stock on hand grouped by Vegetable &amp; Grade</p>
                     </div>
-                    <span id="last-updated-label" class="text-[11px] font-medium text-slate-500 bg-white px-2.5 py-1 rounded-lg border border-slate-200 self-start sm:self-auto">Auto-saved locally</span>
+                    <span id="last-updated-label" class="text-[11px] font-medium text-slate-500 bg-white px-2.5 py-1 rounded-lg border border-slate-200 self-start sm:self-auto">Autosync ready</span>
                 </div>
 
                 <div class="table-scroll-wrap">
@@ -778,7 +782,7 @@
     <footer class="bg-white border-t border-earth-200/80 py-4 px-4 sm:px-6 lg:px-8 mt-8">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 text-center sm:text-left">
             <p class="font-medium text-slate-700">Tyler's Integrated Farm &bull; Vegetable Harvest &amp; Inventory Management System</p>
-            <p>Data stored locally + synced with Firebase (<code class="text-[11px] bg-slate-100 px-1.5 py-0.5 rounded">tif-inventory</code>). Export CSV/JSON regularly for backup.</p>
+            <p>Live autosync via Firebase (<code class="text-[11px] bg-slate-100 px-1.5 py-0.5 rounded">tif-inventory</code>) + local cache. Export CSV/JSON regularly for backup.</p>
         </div>
     </footer>
 
@@ -827,6 +831,30 @@
 
         let db = null;
         let cloudSyncReady = false;
+        let unsubscribeCrops = null;
+        let unsubscribeTransactions = null;
+        let isApplyingRemoteSnapshot = false;
+        let hasInitialCropsSnapshot = false;
+        let hasInitialTxSnapshot = false;
+
+        function setLiveSyncStatus(state, text) {
+            const badge = document.getElementById('live-sync-badge');
+            const dot = document.getElementById('live-sync-dot');
+            const label = document.getElementById('live-sync-text');
+            if (!badge || !dot || !label) return;
+
+            label.textContent = text;
+            if (state === 'live') {
+                badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-400/20 text-emerald-100 border border-emerald-300/40';
+                dot.className = 'w-2 h-2 rounded-full bg-emerald-300 animate-pulse';
+            } else if (state === 'offline') {
+                badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-400/20 text-amber-100 border border-amber-300/40';
+                dot.className = 'w-2 h-2 rounded-full bg-amber-300';
+            } else {
+                badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-400/20 text-sky-100 border border-sky-300/40';
+                dot.className = 'w-2 h-2 rounded-full bg-sky-300 animate-ping';
+            }
+        }
 
         function initFirebaseCloud() {
             try {
@@ -838,45 +866,99 @@
                     db = firebase.firestore();
                     cloudSyncReady = true;
                 }
+
+                if (cloudSyncReady && db && typeof db.enablePersistence === 'function') {
+                    db.enablePersistence({ synchronizeTabs: true }).catch(() => {
+                        // Ignore multi-tab or unsupported browser persistence error
+                    });
+                }
+
+                if (!cloudSyncReady) {
+                    setLiveSyncStatus('offline', 'Live Sync: Local Only');
+                }
             } catch (err) {
                 console.error("Firebase init failed:", err);
                 cloudSyncReady = false;
+                setLiveSyncStatus('offline', 'Live Sync: Local Only');
             }
         }
 
-        async function syncFromCloud() {
+        function startRealtimeCloudSync() {
             if (!cloudSyncReady || !db) return;
-            try {
-                const cropsSnap = await db.collection("crops").get();
-                if (!cropsSnap.empty) {
-                    const cloudCrops = cropsSnap.docs.map(doc => doc.data()).filter(c => c && c.id);
+
+            if (typeof unsubscribeCrops === 'function') unsubscribeCrops();
+            if (typeof unsubscribeTransactions === 'function') unsubscribeTransactions();
+
+            setLiveSyncStatus('syncing', 'Live Sync: Connecting...');
+
+            unsubscribeCrops = db.collection("crops").onSnapshot((snap) => {
+                isApplyingRemoteSnapshot = true;
+                try {
+                    const cloudCrops = snap.docs
+                        .map(doc => doc.data())
+                        .filter(c => c && c.id && c.name);
+
                     if (cloudCrops.length > 0) {
                         crops = cloudCrops;
                         safeSetStorage(STORAGE_KEYS.CROPS, JSON.stringify(crops));
                         populateCropDropdowns();
                         autoFillHarvestPrice();
+                        renderAll();
+                    } else if (!hasInitialCropsSnapshot && crops.length > 0 && navigator.onLine) {
+                        pushCropsToCloud();
                     }
-                } else if (crops.length > 0) {
-                    await pushCropsToCloud();
-                }
 
-                const txSnap = await db.collection("transactions").get();
-                if (!txSnap.empty) {
-                    const cloudTx = txSnap.docs.map(doc => doc.data()).filter(tx => tx && tx.id);
+                    hasInitialCropsSnapshot = true;
+                    const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+                    setLiveSyncStatus('live', 'Live Sync: Active');
+                    const statusLabel = document.getElementById("last-updated-label");
+                    if (statusLabel) statusLabel.textContent = `Live synced ${now}`;
+                } finally {
+                    isApplyingRemoteSnapshot = false;
+                }
+            }, (err) => {
+                console.error("Realtime crops listener error:", err);
+                setLiveSyncStatus('offline', 'Live Sync: Reconnecting...');
+            });
+
+            unsubscribeTransactions = db.collection("transactions").onSnapshot((snap) => {
+                isApplyingRemoteSnapshot = true;
+                try {
+                    const cloudTx = snap.docs
+                        .map(doc => doc.data())
+                        .filter(tx => tx && tx.id && tx.type);
+
+                    const hadTxBefore = transactions.length > 0;
+                    const prevCount = transactions.length;
+
                     transactions = cloudTx;
                     safeSetStorage(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
-                }
+                    renderAll();
 
-                renderAll();
-                const label = document.getElementById("last-updated-label");
-                if (label) label.textContent = "Synced with Firebase";
-            } catch (err) {
-                console.error("Cloud fetch error:", err);
-            }
+                    const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+                    setLiveSyncStatus('live', 'Live Sync: Active');
+                    const statusLabel = document.getElementById("last-updated-label");
+                    if (statusLabel) statusLabel.textContent = `Live synced ${now}`;
+
+                    if (hasInitialTxSnapshot && !snap.metadata.hasPendingWrites && snap.docChanges().length > 0 && (hadTxBefore || prevCount !== cloudTx.length)) {
+                        const hasRemoteChange = snap.docChanges().some(ch => ch.doc.metadata.fromCache === false);
+                        if (hasRemoteChange) {
+                            showToast('Inventory updated live from cloud.', 'success');
+                        }
+                    }
+
+                    hasInitialTxSnapshot = true;
+                } finally {
+                    isApplyingRemoteSnapshot = false;
+                }
+            }, (err) => {
+                console.error("Realtime transactions listener error:", err);
+                setLiveSyncStatus('offline', 'Live Sync: Reconnecting...');
+            });
         }
 
         async function pushCropsToCloud() {
-            if (!cloudSyncReady || !db) return;
+            if (!cloudSyncReady || !db || isApplyingRemoteSnapshot) return;
             try {
                 const batch = db.batch();
                 crops.forEach(crop => {
@@ -891,7 +973,7 @@
         }
 
         async function pushTransactionsToCloud() {
-            if (!cloudSyncReady || !db) return;
+            if (!cloudSyncReady || !db || isApplyingRemoteSnapshot) return;
             try {
                 const batch = db.batch();
                 transactions.forEach(tx => {
@@ -900,11 +982,13 @@
                     batch.set(ref, tx, { merge: true });
                 });
                 await batch.commit();
-                const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+                setLiveSyncStatus('live', 'Live Sync: Active');
                 const label = document.getElementById("last-updated-label");
-                if (label) label.textContent = `Cloud synced ${now}`;
+                if (label) label.textContent = `Live synced ${now}`;
             } catch (err) {
                 console.error("Cloud tx sync error:", err);
+                setLiveSyncStatus('offline', 'Live Sync: Queued');
             }
         }
 
@@ -1153,7 +1237,7 @@
                 transactions = savedTx ? JSON.parse(savedTx) : [];
 
                 if (!savedCrops) {
-                    saveCrops();
+                    safeSetStorage(STORAGE_KEYS.CROPS, JSON.stringify(crops));
                 }
             } catch (err) {
                 console.error('Error loading from localStorage:', err);
@@ -1177,7 +1261,19 @@
             lucide.createIcons();
 
             initFirebaseCloud();
-            syncFromCloud();
+            startRealtimeCloudSync();
+
+            window.addEventListener('online', () => {
+                if (cloudSyncReady) {
+                    startRealtimeCloudSync();
+                    pushCropsToCloud();
+                    pushTransactionsToCloud();
+                }
+            });
+
+            window.addEventListener('offline', () => {
+                setLiveSyncStatus('offline', 'Live Sync: Offline');
+            });
 
             document.addEventListener('click', (e) => {
                 const btn = document.getElementById('backup-menu-btn');
@@ -1218,7 +1314,7 @@
             const ok = safeSetStorage(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
             const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             document.getElementById('last-updated-label').textContent = ok
-                ? `Saved at ${now}`
+                ? `Saving live (${now})...`
                 : `Session only (${now})`;
             if (!ok) {
                 showToast('Storage full or restricted: export CSV/JSON to keep your data.', 'warning');
