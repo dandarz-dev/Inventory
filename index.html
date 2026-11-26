@@ -16,6 +16,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase Compat SDK (Firestore) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -219,8 +222,6 @@
         </div>
     </div>
 
-    <!-- Custom Confirmation Modal -->
-    
     <!-- Password Prompt Modal for Reset Actions (Admin PIN: 1234 - Original settings untouched) -->
     <div id="reset-password-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="reset-password-modal-title">
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-100">
@@ -275,8 +276,6 @@
         </div>
     </div>
 
-    <!-- Add Custom Crop Modal -->
-    
     <!-- Edit Transaction Modal (Admin Only - Original settings untouched) -->
     <div id="edit-tx-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="edit-tx-modal-title">
         <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-100 max-h-[88dvh] overflow-y-auto">
@@ -354,6 +353,7 @@
         </div>
     </div>
 
+    <!-- Add Custom Crop Modal -->
     <div id="crop-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="crop-modal-title">
         <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-100 max-h-[88dvh] overflow-y-auto">
             <div class="flex items-center justify-between mb-4">
@@ -619,7 +619,7 @@
                                 <input type="text" id="sale-buyer" list="buyer-suggestions" required placeholder="e.g., Ormoc Public Market" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none">
                                 <datalist id="buyer-suggestions">
                                     <option value="Public Market">
-                                    <option value="Wholesaler / Viajero">
+                                    <option value="Wholesaler / Trader">
                                     <option value="Farmgate Walk-in">
                                     <option value="Local Restaurant / Hotel">
                                     <option value="Supermarket Consignment">
@@ -799,7 +799,7 @@
     <footer class="bg-white border-t border-earth-200/80 py-4 px-4 sm:px-6 lg:px-8 mt-8">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 text-center sm:text-left">
             <p class="font-medium text-slate-700">Tyler's Integrated Farm &bull; Vegetable Harvest &amp; Inventory Management System</p>
-            <p>Data stored locally on your device (<code class="text-[11px] bg-slate-100 px-1.5 py-0.5 rounded">localStorage</code>). Export CSV/JSON regularly for backup.</p>
+            <p>Data stored locally + synced with Firebase (<code class="text-[11px] bg-slate-100 px-1.5 py-0.5 rounded">tif-inventory</code>). Export CSV/JSON regularly for backup.</p>
         </div>
     </footer>
 
@@ -808,6 +808,121 @@
         const ADMIN_PASSWORD_STORAGE_KEY = 'tylers_farm_admin_password_v1';
         const DEFAULT_ADMIN_PIN = '1234';
         let activeRole = 'user';
+
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyANP9LFK6w2OtPxhpi6jXRrd_ApNuQHZXA",
+            authDomain: "tif-inventory.firebaseapp.com",
+            projectId: "tif-inventory",
+            storageBucket: "tif-inventory.firebasestorage.app",
+            messagingSenderId: "745911433381",
+            appId: "1:745911433381:web:fc4688d5f94fea229bf54c",
+            measurementId: "G-1VQTH189J2"
+        };
+
+        let db = null;
+        let cloudSyncReady = false;
+
+        function initFirebaseCloud() {
+            try {
+                if (window.firebase && !firebase.apps.length) {
+                    firebase.initializeApp(FIREBASE_CONFIG);
+                    db = firebase.firestore();
+                    cloudSyncReady = true;
+                } else if (window.firebase && firebase.apps.length && !db) {
+                    db = firebase.firestore();
+                    cloudSyncReady = true;
+                }
+            } catch (err) {
+                console.error("Firebase init failed:", err);
+                cloudSyncReady = false;
+            }
+        }
+
+        async function syncFromCloud() {
+            if (!cloudSyncReady || !db) return;
+            try {
+                const cropsSnap = await db.collection("crops").get();
+                if (!cropsSnap.empty) {
+                    const cloudCrops = cropsSnap.docs.map(doc => doc.data()).filter(c => c && c.id);
+                    if (cloudCrops.length > 0) {
+                        crops = cloudCrops;
+                        safeSetStorage(STORAGE_KEYS.CROPS, JSON.stringify(crops));
+                        populateCropDropdowns();
+                        autoFillHarvestPrice();
+                    }
+                } else if (crops.length > 0) {
+                    await pushCropsToCloud();
+                }
+
+                const txSnap = await db.collection("transactions").get();
+                if (!txSnap.empty) {
+                    const cloudTx = txSnap.docs.map(doc => doc.data()).filter(tx => tx && tx.id);
+                    transactions = cloudTx;
+                    safeSetStorage(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
+                }
+
+                renderAll();
+                const label = document.getElementById("last-updated-label");
+                if (label) label.textContent = "Synced with Firebase";
+            } catch (err) {
+                console.error("Cloud fetch error:", err);
+            }
+        }
+
+        async function pushCropsToCloud() {
+            if (!cloudSyncReady || !db) return;
+            try {
+                const batch = db.batch();
+                crops.forEach(crop => {
+                    if (!crop || !crop.id) return;
+                    const ref = db.collection("crops").doc(crop.id);
+                    batch.set(ref, crop, { merge: true });
+                });
+                await batch.commit();
+            } catch (err) {
+                console.error("Cloud crop sync error:", err);
+            }
+        }
+
+        async function pushTransactionsToCloud() {
+            if (!cloudSyncReady || !db) return;
+            try {
+                const batch = db.batch();
+                transactions.forEach(tx => {
+                    if (!tx || !tx.id) return;
+                    const ref = db.collection("transactions").doc(tx.id);
+                    batch.set(ref, tx, { merge: true });
+                });
+                await batch.commit();
+                const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                const label = document.getElementById("last-updated-label");
+                if (label) label.textContent = `Cloud synced ${now}`;
+            } catch (err) {
+                console.error("Cloud tx sync error:", err);
+            }
+        }
+
+        async function deleteTransactionFromCloud(txId) {
+            if (!cloudSyncReady || !db || !txId) return;
+            try {
+                await db.collection("transactions").doc(txId).delete();
+            } catch (err) {
+                console.error("Cloud delete tx error:", err);
+            }
+        }
+
+        async function deleteTxIdsFromCloud(txIds) {
+            if (!cloudSyncReady || !db || !Array.isArray(txIds) || txIds.length === 0) return;
+            try {
+                const batch = db.batch();
+                txIds.forEach(id => {
+                    batch.delete(db.collection("transactions").doc(id));
+                });
+                await batch.commit();
+            } catch (err) {
+                console.error("Cloud batch delete tx error:", err);
+            }
+        }
 
         function getAdminPassword() {
             const saved = safeGetStorage(ADMIN_PASSWORD_STORAGE_KEY);
@@ -889,9 +1004,9 @@
                 activeRole = 'admin';
                 safeSetStorage(ROLE_STORAGE_KEY, 'admin');
                 closeAdminModal();
-                    closeAdminPasswordSettingsModal();
-                    closeResetPasswordModal();
-                    closeEditTxModal();
+                closeAdminPasswordSettingsModal();
+                closeResetPasswordModal();
+                closeEditTxModal();
                 applyRolePermissions();
                 renderAll();
                 showToast('Switched to Admin Mode.', 'success');
@@ -1050,6 +1165,9 @@
             renderAll();
             lucide.createIcons();
 
+            initFirebaseCloud();
+            syncFromCloud();
+
             document.addEventListener('click', (e) => {
                 const btn = document.getElementById('backup-menu-btn');
                 const menu = document.getElementById('backup-dropdown');
@@ -1062,12 +1180,10 @@
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     closeCropModal();
-                closeAdminPasswordSettingsModal();
-                closeEditTxModal();
-                    closeAdminModal();
                     closeAdminPasswordSettingsModal();
-                    closeResetPasswordModal();
                     closeEditTxModal();
+                    closeAdminModal();
+                    closeResetPasswordModal();
                     closeConfirmModal();
                     const menu = document.getElementById('backup-dropdown');
                     const btn = document.getElementById('backup-menu-btn');
@@ -1084,6 +1200,7 @@
             if (!ok) {
                 showToast('Storage full or restricted: crop profile kept for current session.', 'warning');
             }
+            pushCropsToCloud();
         }
 
         function saveTransactions() {
@@ -1095,6 +1212,7 @@
             if (!ok) {
                 showToast('Storage full or restricted: export CSV/JSON to keep your data.', 'warning');
             }
+            pushTransactionsToCloud();
         }
 
         function formatPHP(amount) {
@@ -1668,8 +1786,8 @@
 
             document.getElementById('custom-crop-form').reset();
             closeCropModal();
-                closeAdminPasswordSettingsModal();
-                closeEditTxModal();
+            closeAdminPasswordSettingsModal();
+            closeEditTxModal();
             showToast(`Added "${name}" to Tyler's Farm crop profiles.`, 'success');
         });
 
@@ -1698,7 +1816,6 @@
             }
             closeConfirmModal();
         });
-
 
         let pendingResetAction = null;
 
@@ -1770,14 +1887,19 @@
                     `Password verified. Choose whether to delete Class A only, Class B only, or ALL grades for ${cropName}. Other crops and original settings stay untouched.`,
                     () => {
                         const selectedGrade = document.getElementById('reset-grade-select').value;
+                        let removedIds = [];
                         if (selectedGrade === 'ALL') {
+                            removedIds = transactions.filter(t => t.cropId === cropId).map(t => t.id);
                             transactions = transactions.filter(t => t.cropId !== cropId);
                             saveTransactions();
+                            deleteTxIdsFromCloud(removedIds);
                             renderAll();
                             showToast(`Reset all grades for ${cropName}.`, 'success');
                         } else {
+                            removedIds = transactions.filter(t => t.cropId === cropId && t.grade === selectedGrade).map(t => t.id);
                             transactions = transactions.filter(t => !(t.cropId === cropId && t.grade === selectedGrade));
                             saveTransactions();
+                            deleteTxIdsFromCloud(removedIds);
                             renderAll();
                             showToast(`Deleted ${selectedGrade} records for ${cropName}.`, 'success');
                         }
@@ -1902,6 +2024,7 @@
                     () => {
                         transactions = transactions.filter(t => t.id !== txId);
                         saveTransactions();
+                        deleteTransactionFromCloud(txId);
                         renderAll();
                         showToast('Transaction deleted and stock recalculated.', 'success');
                     }
@@ -2098,10 +2221,12 @@
                 'Reset All Farm Records?',
                 'This will permanently delete all harvest, sales, and spoilage logs stored on this device. Make sure you have exported a CSV or JSON backup first.',
                 () => {
+                    const removedIds = transactions.map(t => t.id);
                     transactions = [];
                     crops = [...DEFAULT_CROPS];
                     saveCrops();
                     saveTransactions();
+                    deleteTxIdsFromCloud(removedIds);
                     populateCropDropdowns();
                     autoFillHarvestPrice();
                     renderAll();
