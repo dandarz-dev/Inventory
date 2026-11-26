@@ -1,0 +1,2151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0f3923">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Tyler's Farm">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <title>Tyler's Integrated Farm — Vegetable Inventory &amp; Harvest System</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    },
+                    colors: {
+                        farm: {
+                            950: '#071f13',
+                            900: '#0f3923',
+                            800: '#164e31',
+                            700: '#1d6640',
+                            600: '#258050',
+                            500: '#2e9e63',
+                            100: '#e6f5ec',
+                            50: '#f3faf6',
+                        },
+                        earth: {
+                            800: '#5c4033',
+                            600: '#8b5a2b',
+                            200: '#e8dfd5',
+                            100: '#f5f0ea',
+                            50: '#faf8f5',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Mobile & iOS/Android compatibility rules */
+        :root {
+            --sat: env(safe-area-inset-top, 0px);
+            --sar: env(safe-area-inset-right, 0px);
+            --sab: env(safe-area-inset-bottom, 0px);
+            --sal: env(safe-area-inset-left, 0px);
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        body {
+            padding-top: var(--sat);
+            padding-left: var(--sal);
+            padding-right: var(--sar);
+            padding-bottom: calc(var(--sab) + 1rem);
+            overscroll-behavior-y: contain;
+        }
+
+        /* Prevent iOS Safari auto-zoom on form input focus (<16px triggers zoom) */
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select,
+        textarea {
+            font-size: 16px !important;
+            line-height: 1.4;
+        }
+
+        @media (min-width: 768px) {
+            input[type="text"],
+            input[type="number"],
+            input[type="date"],
+            select,
+            textarea {
+                font-size: 14px !important;
+            }
+        }
+
+        /* Smooth momentum scrolling for Android & iOS tables/containers */
+        .table-scroll-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-x: contain;
+        }
+
+        button,
+        [role="button"],
+        label[for],
+        label.cursor-pointer {
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; color: black !important; padding: 0 !important; }
+            .print-shadow-none { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
+        }
+    </style>
+</head>
+<body class="bg-earth-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Toast Notification Container (Safe-area aware for iOS/Android) -->
+    <div id="toast-container" style="bottom: calc(1rem + var(--sab)); right: calc(1rem + var(--sar)); left: calc(1rem + var(--sal));" class="fixed z-50 flex flex-col gap-2 sm:left-auto max-w-sm sm:w-full pointer-events-none"></div>
+
+    <!-- Active Role Bar (Admin vs User - Settings Locked) -->
+    <div id="role-bar" class="bg-farm-950/95 text-emerald-100 border-b border-white/10 no-print">
+        <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div class="flex items-center gap-2.5">
+                <span id="role-pill" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold text-[11px] bg-emerald-500/20 text-emerald-200 border border-emerald-400/30">
+                    <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                    <span id="role-label">ADMIN MODE</span>
+                </span>
+                <span id="role-desc" class="text-emerald-100/75 hidden sm:inline">Full access: harvest, sale, spoilage, transaction log, per-crop reset, add crop, delete &amp; backup tools.</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" id="btn-switch-user" onclick="switchToUserRole()" class="min-h-[36px] px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/25 text-white font-semibold transition cursor-pointer inline-flex items-center gap-1.5">
+                    <i data-lucide="user" class="w-3.5 h-3.5"></i>
+                    <span>User Mode</span>
+                </button>
+                <button type="button" id="btn-switch-admin" onclick="openAdminModal()" class="min-h-[36px] px-3 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/30 font-semibold transition cursor-pointer inline-flex items-center gap-1.5">
+                    <i data-lucide="key-round" class="w-3.5 h-3.5"></i>
+                    <span>Admin Login</span>
+                </button>
+                <button type="button" id="btn-admin-pw-settings" onclick="openAdminPasswordSettingsModal()" class="admin-only-control min-h-[36px] px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-amber-200 border border-amber-400/30 font-semibold transition cursor-pointer inline-flex items-center gap-1.5">
+                    <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+                    <span>Password Settings</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin PIN Modal (Fixed Admin PIN: 1234 - Settings locked) -->
+    <div id="admin-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-100">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="p-2 bg-amber-50 text-amber-700 rounded-xl shrink-0">
+                        <i data-lucide="shield-check" class="w-5 h-5"></i>
+                    </div>
+                    <h3 id="admin-modal-title" class="text-base font-bold text-slate-900">Switch to Admin Mode</h3>
+                </div>
+                <button type="button" onclick="closeAdminModal()" aria-label="Close modal" class="min-w-[40px] min-h-[40px] flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-xl">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-500 mb-4">Enter Admin Password / PIN to unlock Transaction Log, Per-Crop Reset, Add Crop, Delete Entries, and Backup/Reset tools.</p>
+            <form id="admin-pin-form" class="space-y-3.5">
+                <div>
+                    <label for="admin-pin-input" class="block text-xs font-semibold text-slate-600 mb-1">Admin PIN</label>
+                    <input type="password" id="admin-pin-input" inputmode="numeric" maxlength="12" required placeholder="Enter Admin PIN" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-farm-600 focus:ring-2 focus:ring-farm-600/20 outline-none">
+                </div>
+                <div class="flex justify-end gap-2 pt-1">
+                    <button type="button" onclick="closeAdminModal()" class="min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
+                    <button type="submit" class="min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold text-white bg-farm-800 hover:bg-farm-900 transition">Unlock Admin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Password Settings Modal (Admin Only) -->
+    <div id="admin-password-settings-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="admin-pw-settings-title">
+        <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-100 max-h-[88dvh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="p-2 bg-amber-50 text-amber-700 rounded-xl shrink-0">
+                        <i data-lucide="settings" class="w-5 h-5"></i>
+                    </div>
+                    <h3 id="admin-pw-settings-title" class="text-base font-bold text-slate-900">Admin Password Settings</h3>
+                </div>
+                <button type="button" onclick="closeAdminPasswordSettingsModal()" aria-label="Close modal" class="min-w-[40px] min-h-[40px] flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-xl">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-500 mb-4">Change the Admin PIN / password used for Admin Login, Edit/Delete in Transaction Log, and Reset actions.</p>
+            <div id="admin-pw-settings-popup-msg" class="hidden text-xs font-semibold px-3 py-2 rounded-xl mb-3 border"></div>
+            <form id="admin-password-settings-form" class="space-y-3.5">
+                <div>
+                    <label for="current-admin-pw-input" class="block text-xs font-semibold text-slate-600 mb-1">Current Admin Password / PIN</label>
+                    <input type="password" id="current-admin-pw-input" maxlength="20" required placeholder="Enter current password" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20 outline-none">
+                </div>
+                <div>
+                    <label for="new-admin-pw-input" class="block text-xs font-semibold text-slate-600 mb-1">New Admin Password / PIN</label>
+                    <input type="password" id="new-admin-pw-input" maxlength="20" required placeholder="Enter new password (min 4 chars)" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20 outline-none">
+                </div>
+                <div>
+                    <label for="confirm-admin-pw-input" class="block text-xs font-semibold text-slate-600 mb-1">Confirm New Password / PIN</label>
+                    <input type="password" id="confirm-admin-pw-input" maxlength="20" required placeholder="Re-enter new password" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20 outline-none">
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
+                    <button type="button" onclick="resetAdminPasswordToDefault()" class="min-h-[40px] px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Reset to Default (1234)</button>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="closeAdminPasswordSettingsModal()" class="min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
+                        <button type="submit" class="min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold text-white bg-farm-800 hover:bg-farm-900 transition">Save Password</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Custom Confirmation Modal -->
+    
+    <!-- Password Prompt Modal for Reset Actions (Admin PIN: 1234 - Original settings untouched) -->
+    <div id="reset-password-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="reset-password-modal-title">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-100">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="p-2 bg-rose-50 text-rose-700 rounded-xl shrink-0">
+                        <i data-lucide="lock" class="w-5 h-5"></i>
+                    </div>
+                    <h3 id="reset-password-modal-title" class="text-base font-bold text-slate-900">Password Required to Reset</h3>
+                </div>
+                <button type="button" onclick="closeResetPasswordModal()" aria-label="Close modal" class="min-w-[40px] min-h-[40px] flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-xl">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <p id="reset-password-target-label" class="text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-100 px-3 py-2 rounded-xl mb-3"></p>
+            <p class="text-xs text-slate-500 mb-4">Enter the password to confirm this reset action. Original crop settings and PIN stay unchanged.</p>
+            <div id="reset-password-popup-msg" class="hidden text-xs font-semibold px-3 py-2 rounded-xl mb-3 border"></div>
+            <form id="reset-password-form" class="space-y-3.5">
+                <div>
+                    <label for="reset-password-input" class="block text-xs font-semibold text-slate-600 mb-1">Password</label>
+                    <input type="password" id="reset-password-input" inputmode="numeric" maxlength="20" required placeholder="Enter password" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-rose-600 focus:ring-2 focus:ring-rose-600/20 outline-none">
+                </div>
+                <div class="flex justify-end gap-2 pt-1">
+                    <button type="button" onclick="closeResetPasswordModal()" class="min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
+                    <button type="submit" class="min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 transition">Verify &amp; Reset</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+        <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-100 max-h-[88dvh] overflow-y-auto">
+            <div class="flex items-center gap-3 text-amber-600 mb-3">
+                <div class="p-2.5 bg-amber-50 rounded-xl shrink-0">
+                    <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                </div>
+                <h3 id="confirm-title" class="text-lg font-bold text-slate-900">Confirm Action</h3>
+            </div>
+            <p id="confirm-message" class="text-sm text-slate-600 mb-4 leading-relaxed">Are you sure you want to proceed?</p>
+            <div id="reset-grade-picker" class="hidden mb-5 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                <label for="reset-grade-select" class="block text-xs font-bold text-slate-700 mb-1.5">Select Grade to Delete / Reset:</label>
+                <select id="reset-grade-select" class="w-full min-h-[42px] px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm font-semibold text-slate-800 outline-none">
+                    <option value="ALL">All Grades (Class A, Class B, Assorted, Reject)</option>
+                    <option value="Class A (Good)">Class A (Good) Only</option>
+                    <option value="Class B (Second)">Class B (Second) Only</option>
+                </select>
+            </div>
+            <div class="flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3">
+                <button id="confirm-cancel-btn" type="button" class="w-full sm:w-auto min-h-[44px] px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 transition">Cancel</button>
+                <button id="confirm-ok-btn" type="button" class="w-full sm:w-auto min-h-[44px] px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 active:bg-rose-800 shadow-sm transition">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Custom Crop Modal -->
+    
+    <!-- Edit Transaction Modal (Admin Only - Original settings untouched) -->
+    <div id="edit-tx-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="edit-tx-modal-title">
+        <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-100 max-h-[88dvh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="p-2 bg-amber-50 text-amber-700 rounded-xl shrink-0">
+                        <i data-lucide="pencil" class="w-5 h-5"></i>
+                    </div>
+                    <h3 id="edit-tx-modal-title" class="text-base font-bold text-slate-900">Edit Transaction Entry</h3>
+                </div>
+                <button type="button" onclick="closeEditTxModal()" aria-label="Close modal" class="min-w-[40px] min-h-[40px] flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-xl">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="edit-tx-form" class="space-y-3.5">
+                <input type="hidden" id="edit-tx-id">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label for="edit-tx-date" class="block text-xs font-semibold text-slate-600 mb-1">Date</label>
+                        <input type="date" id="edit-tx-date" required class="w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 focus:border-farm-600 outline-none bg-white">
+                    </div>
+                    <div>
+                        <label for="edit-tx-grade" class="block text-xs font-semibold text-slate-600 mb-1">Grade / Classification</label>
+                        <select id="edit-tx-grade" required class="w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 focus:border-farm-600 outline-none bg-white">
+                            <option value="Class A (Good)">Class A (Good)</option>
+                            <option value="Class B (Second)">Class B (Second)</option>
+                            <option value="Assorted">Assorted</option>
+                            <option value="Reject / Culls">Reject / Culls</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label for="edit-tx-qty" class="block text-xs font-semibold text-slate-600 mb-1">Weight (kg)</label>
+                        <input type="number" id="edit-tx-qty" inputmode="decimal" step="0.1" min="0.1" required class="w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 focus:border-farm-600 outline-none">
+                    </div>
+                    <div id="edit-tx-price-wrap">
+                        <label for="edit-tx-price" class="block text-xs font-semibold text-slate-600 mb-1">Price (₱/kg)</label>
+                        <input type="number" id="edit-tx-price" inputmode="decimal" step="0.01" min="0" class="w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 focus:border-farm-600 outline-none">
+                    </div>
+                </div>
+                <div id="edit-tx-sale-fields" class="grid grid-cols-1 sm:grid-cols-2 gap-3 hidden">
+                    <div>
+                        <label for="edit-tx-buyer" class="block text-xs font-semibold text-slate-600 mb-1">Buyer / Market</label>
+                        <input type="text" id="edit-tx-buyer" class="w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 focus:border-farm-600 outline-none">
+                    </div>
+                    <div>
+                        <label for="edit-tx-payment" class="block text-xs font-semibold text-slate-600 mb-1">Payment Status</label>
+                        <select id="edit-tx-payment" class="w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 focus:border-farm-600 outline-none bg-white">
+                            <option value="Paid (Cash)">Paid (Cash)</option>
+                            <option value="Paid (GCash / Bank)">Paid (GCash / Bank)</option>
+                            <option value="Credit / Utang">Credit / Utang (Collectible)</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="edit-tx-spoilage-fields" class="hidden">
+                    <label for="edit-tx-reason" class="block text-xs font-semibold text-slate-600 mb-1">Spoilage Reason</label>
+                    <select id="edit-tx-reason" class="w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 focus:border-farm-600 outline-none bg-white">
+                        <option value="Overripe / Rot">Overripe / Rot</option>
+                        <option value="Pest / Insect Damage">Pest / Insect Damage</option>
+                        <option value="Transport / Crate Bruising">Transport / Crate Bruising</option>
+                        <option value="Moisture / Weight Shrinkage">Moisture / Weight Shrinkage</option>
+                        <option value="Weather / Sunscald">Weather / Sunscald</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="edit-tx-notes" class="block text-xs font-semibold text-slate-600 mb-1">Notes / Remarks</label>
+                    <input type="text" id="edit-tx-notes" class="w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 focus:border-farm-600 outline-none">
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeEditTxModal()" class="min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
+                    <button type="submit" class="min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold text-white bg-farm-800 hover:bg-farm-900 transition">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="crop-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="crop-modal-title">
+        <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-100 max-h-[88dvh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="p-2 bg-farm-100 text-farm-800 rounded-xl shrink-0">
+                        <i data-lucide="sprout" class="w-5 h-5"></i>
+                    </div>
+                    <h3 id="crop-modal-title" class="text-lg font-bold text-slate-900">Add Vegetable / Crop Profile</h3>
+                </div>
+                <button type="button" onclick="closeCropModal()" aria-label="Close modal" class="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-xl">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="custom-crop-form" class="space-y-4">
+                <div>
+                    <label for="new-crop-name" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Crop Name (English / Local)</label>
+                    <input type="text" id="new-crop-name" required placeholder="e.g., Ampalaya (Bitter Gourd)" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-farm-600 focus:ring-2 focus:ring-farm-600/20 outline-none">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label for="new-crop-price" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Default Farmgate (₱/kg)</label>
+                        <input type="number" id="new-crop-price" inputmode="decimal" step="0.01" min="0" value="45" required class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-farm-600 focus:ring-2 focus:ring-farm-600/20 outline-none">
+                    </div>
+                    <div>
+                        <label for="new-crop-threshold" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Low Stock Alert (kg)</label>
+                        <input type="number" id="new-crop-threshold" inputmode="decimal" step="1" min="1" value="15" required class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-farm-600 focus:ring-2 focus:ring-farm-600/20 outline-none">
+                    </div>
+                </div>
+                <div class="pt-2 flex flex-col-reverse sm:flex-row justify-end gap-2.5">
+                    <button type="button" onclick="closeCropModal()" class="w-full sm:w-auto min-h-[44px] px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
+                    <button type="submit" class="w-full sm:w-auto min-h-[44px] px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-farm-800 hover:bg-farm-900 shadow-sm transition">Save Crop</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Header & Branding -->
+    <header class="bg-gradient-to-r from-farm-950 via-farm-900 to-farm-800 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0 shadow-inner">
+                        <i data-lucide="leaf" class="w-7 h-7 text-emerald-300"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h1 class="text-lg sm:text-2xl font-extrabold tracking-tight text-white">Tyler's Integrated Farm</h1>
+                            <span class="px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 rounded-full">Android &amp; iOS Ready</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-emerald-100/80 mt-0.5">Vegetable Harvest, Stock &amp; Dispatch Inventory System</p>
+                    </div>
+                </div>
+
+                <!-- Data & Export Toolbar -->
+                <div class="flex flex-wrap items-center gap-2 no-print">
+                    <button type="button" onclick="openCropModal()" class="admin-only-control min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition cursor-pointer">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        <span>Add Crop</span>
+                    </button>
+                    <button type="button" onclick="exportCSV()" class="min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/25 text-white border border-white/15 text-xs font-semibold transition cursor-pointer" title="Download Excel-compatible CSV">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                        <span>Export CSV</span>
+                    </button>
+                    <div class="relative inline-block admin-only-control">
+                        <button type="button" onclick="toggleBackupMenu()" id="backup-menu-btn" aria-expanded="false" aria-controls="backup-dropdown" class="min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/25 text-white border border-white/15 text-xs font-semibold transition cursor-pointer">
+                            <i data-lucide="database" class="w-4 h-4"></i>
+                            <span>Backup / Tools</span>
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                        </button>
+                        <div id="backup-dropdown" class="hidden absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-40 text-slate-700">
+                            <button type="button" onclick="openAdminPasswordSettingsModal()" class="w-full min-h-[44px] px-4 py-2.5 text-left text-xs font-semibold text-amber-800 hover:bg-amber-50 active:bg-amber-100 flex items-center gap-2.5">
+                                <i data-lucide="settings" class="w-4 h-4 text-amber-700 shrink-0"></i> Change Admin Password
+                            </button>
+                            <div class="border-t border-slate-100 my-1"></div>
+                            <button type="button" onclick="exportJSON()" class="w-full min-h-[44px] px-4 py-2.5 text-left text-xs font-medium hover:bg-slate-50 active:bg-slate-100 flex items-center gap-2.5">
+                                <i data-lucide="download" class="w-4 h-4 text-farm-700 shrink-0"></i> Export JSON Backup
+                            </button>
+                            <label class="w-full min-h-[44px] px-4 py-2.5 text-left text-xs font-medium hover:bg-slate-50 active:bg-slate-100 flex items-center gap-2.5 cursor-pointer">
+                                <i data-lucide="upload" class="w-4 h-4 text-blue-600 shrink-0"></i> Import JSON Backup
+                                <input type="file" id="import-json-input" accept=".json,application/json" class="sr-only" onchange="importJSON(event)">
+                            </label>
+                            <button type="button" onclick="window.print()" class="w-full min-h-[44px] px-4 py-2.5 text-left text-xs font-medium hover:bg-slate-50 active:bg-slate-100 flex items-center gap-2.5">
+                                <i data-lucide="printer" class="w-4 h-4 text-slate-600 shrink-0"></i> Print Farm Summary
+                            </button>
+                            <div class="border-t border-slate-100 my-1"></div>
+                            <button type="button" onclick="confirmLoadSample()" class="w-full min-h-[44px] px-4 py-2.5 text-left text-xs font-medium hover:bg-amber-50 active:bg-amber-100 text-amber-700 flex items-center gap-2.5">
+                                <i data-lucide="sparkles" class="w-4 h-4 shrink-0"></i> Load Sample Harvest Data
+                            </button>
+                            <button type="button" onclick="confirmResetAll()" class="w-full min-h-[44px] px-4 py-2.5 text-left text-xs font-medium hover:bg-rose-50 active:bg-rose-100 text-rose-600 flex items-center gap-2.5">
+                                <i data-lucide="trash-2" class="w-4 h-4 shrink-0"></i> Reset All Records
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6">
+
+        <!-- KPI Summary Cards -->
+        <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-earth-200/80 print-shadow-none flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 truncate">Available Stock</p>
+                    <h2 id="kpi-available-kg" class="text-xl sm:text-3xl font-extrabold text-farm-900 mt-1">0.0 kg</h2>
+                    <p id="kpi-crop-count" class="text-[11px] sm:text-xs text-slate-500 mt-1 truncate">Across 0 active batches</p>
+                </div>
+                <div class="p-2.5 sm:p-3 rounded-2xl bg-farm-100 text-farm-800 shrink-0">
+                    <i data-lucide="package-check" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-earth-200/80 print-shadow-none flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 truncate">Est. Stock Value</p>
+                    <h2 id="kpi-stock-value" class="text-xl sm:text-3xl font-extrabold text-emerald-700 mt-1">₱0.00</h2>
+                    <p class="text-[11px] sm:text-xs text-slate-500 mt-1 truncate">Farmgate valuation</p>
+                </div>
+                <div class="p-2.5 sm:p-3 rounded-2xl bg-emerald-50 text-emerald-700 shrink-0">
+                    <i data-lucide="coins" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-earth-200/80 print-shadow-none flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 truncate">Sales Revenue</p>
+                    <h2 id="kpi-sold-revenue" class="text-xl sm:text-3xl font-extrabold text-blue-700 mt-1">₱0.00</h2>
+                    <p id="kpi-sold-kg" class="text-[11px] sm:text-xs text-slate-500 mt-1 truncate">0.0 kg dispatched</p>
+                </div>
+                <div class="p-2.5 sm:p-3 rounded-2xl bg-blue-50 text-blue-700 shrink-0">
+                    <i data-lucide="trending-up" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-earth-200/80 print-shadow-none flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 truncate">Spoilage / Loss</p>
+                    <h2 id="kpi-spoilage-kg" class="text-xl sm:text-3xl font-extrabold text-rose-600 mt-1">0.0 kg</h2>
+                    <p id="kpi-spoilage-rate" class="text-[11px] sm:text-xs text-slate-500 mt-1 truncate">0.0% of total harvest</p>
+                </div>
+                <div class="p-2.5 sm:p-3 rounded-2xl bg-rose-50 text-rose-600 shrink-0">
+                    <i data-lucide="alert-octagon" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- Workspace Grid: Stock Movement Form (Left) + Live Stock Overview (Right) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
+
+            <!-- Left Column: Inventory & Stock Movement Form -->
+            <section id="movement-form-section" class="lg:col-span-5 bg-white rounded-2xl shadow-xs border border-earth-200/80 overflow-hidden no-print">
+                <div class="bg-earth-100/70 px-4 sm:px-5 py-4 border-b border-earth-200/80">
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="clipboard-edit" class="w-5 h-5 text-farm-800"></i>
+                        Record Stock Movement
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Log daily harvest, market dispatch, or post-harvest loss</p>
+                </div>
+
+                <!-- 3 Action Mode Tabs -->
+                <div class="grid grid-cols-3 border-b border-slate-200 bg-slate-50/70 p-1.5 gap-1.5" role="tablist">
+                    <button type="button" role="tab" aria-selected="true" onclick="switchMode('harvest')" id="tab-harvest" class="mode-tab min-h-[44px] flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs font-bold transition cursor-pointer bg-farm-800 text-white shadow-xs">
+                        <i data-lucide="sprout" class="w-4 h-4 shrink-0"></i>
+                        <span>Harvest In</span>
+                    </button>
+                    <button type="button" role="tab" aria-selected="false" onclick="switchMode('sale')" id="tab-sale" class="mode-tab min-h-[44px] flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs font-bold transition cursor-pointer text-slate-600 hover:bg-white">
+                        <i data-lucide="truck" class="w-4 h-4 shrink-0"></i>
+                        <span>Sale / Out</span>
+                    </button>
+                    <button type="button" role="tab" aria-selected="false" onclick="switchMode('spoilage')" id="tab-spoilage" class="mode-tab min-h-[44px] flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs font-bold transition cursor-pointer text-slate-600 hover:bg-white">
+                        <i data-lucide="trash" class="w-4 h-4 shrink-0"></i>
+                        <span>Spoilage</span>
+                    </button>
+                </div>
+
+                <!-- Dynamic Form Container -->
+                <div class="p-4 sm:p-5">
+                    <!-- FORM 1: RECORD HARVEST (STOCK IN) -->
+                    <form id="form-harvest" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <div>
+                                <label for="harvest-date" class="block text-xs font-semibold text-slate-600 mb-1">Harvest Date</label>
+                                <input type="date" id="harvest-date" required class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-farm-600 focus:ring-2 focus:ring-farm-600/20 outline-none bg-white">
+                            </div>
+                            <div>
+                                <label for="harvest-crop" class="block text-xs font-semibold text-slate-600 mb-1">Crop / Vegetable</label>
+                                <select id="harvest-crop" required onchange="autoFillHarvestPrice()" class="crop-select w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-farm-600 focus:ring-2 focus:ring-farm-600/20 outline-none bg-white"></select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <div>
+                                <label for="harvest-grade" class="block text-xs font-semibold text-slate-600 mb-1">Grade / Classification</label>
+                                <select id="harvest-grade" required class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-farm-600 focus:ring-2 focus:ring-farm-600/20 outline-none bg-white">
+                                    <option value="Class A (Good)">Class A (Good)</option>
+                                    <option value="Class B (Second)">Class B (Second)</option>
+                                    <option value="Assorted">Assorted</option>
+                                    <option value="Reject / Culls">Reject / Culls</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="harvest-qty" class="block text-xs font-semibold text-slate-600 mb-1">Harvest Weight (kg)</label>
+                                <input type="number" id="harvest-qty" inputmode="decimal" step="0.1" min="0.1" required placeholder="e.g., 45.5" oninput="updateHarvestPreview()" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-farm-600 focus:ring-2 focus:ring-farm-600/20 outline-none">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <div>
+                                <label for="harvest-price" class="block text-xs font-semibold text-slate-600 mb-1">Farmgate Price (₱/kg)</label>
+                                <input type="number" id="harvest-price" inputmode="decimal" step="0.01" min="0" required placeholder="e.g., 85.00" oninput="updateHarvestPreview()" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-farm-600 focus:ring-2 focus:ring-farm-600/20 outline-none">
+                            </div>
+                            <div class="bg-farm-50 border border-farm-100 rounded-xl px-3.5 py-2.5 min-h-[44px] flex flex-col justify-center">
+                                <span class="text-[11px] font-semibold uppercase text-farm-700">Est. Batch Value</span>
+                                <span id="harvest-total-preview" class="text-base font-extrabold text-farm-900">₱0.00</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="harvest-notes" class="block text-xs font-semibold text-slate-600 mb-1">Plot / Greenhouse / Batch Notes</label>
+                            <input type="text" id="harvest-notes" placeholder="e.g., Plot 2 - Morning pick, Greenhouse B" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-farm-600 focus:ring-2 focus:ring-farm-600/20 outline-none">
+                        </div>
+
+                        <button type="submit" class="w-full min-h-[46px] py-3 px-4 rounded-xl bg-farm-800 hover:bg-farm-900 active:bg-farm-950 text-white font-bold text-sm shadow-sm flex items-center justify-center gap-2 transition cursor-pointer">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                            <span>Add Harvest to Inventory</span>
+                        </button>
+                    </form>
+
+                    <!-- FORM 2: RECORD SALE / DISPATCH (STOCK OUT) -->
+                    <form id="form-sale" class="space-y-4 hidden">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <div>
+                                <label for="sale-date" class="block text-xs font-semibold text-slate-600 mb-1">Dispatch / Sale Date</label>
+                                <input type="date" id="sale-date" required class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none bg-white">
+                            </div>
+                            <div>
+                                <label for="sale-stock-key" class="block text-xs font-semibold text-slate-600 mb-1">Select Available Stock</label>
+                                <select id="sale-stock-key" required onchange="onSaleStockChange()" class="available-stock-select w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none bg-white"></select>
+                            </div>
+                        </div>
+
+                        <div id="sale-stock-hint" class="text-xs font-medium px-3.5 py-2.5 rounded-xl bg-blue-50 text-blue-800 border border-blue-100 flex items-center justify-between">
+                            <span>Available on hand:</span>
+                            <span id="sale-available-badge" class="font-bold">0.0 kg</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <div>
+                                <label for="sale-qty" class="block text-xs font-semibold text-slate-600 mb-1">Quantity Sold (kg)</label>
+                                <input type="number" id="sale-qty" inputmode="decimal" step="0.1" min="0.1" required placeholder="e.g., 20.0" oninput="updateSalePreview()" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none">
+                            </div>
+                            <div>
+                                <label for="sale-price" class="block text-xs font-semibold text-slate-600 mb-1">Selling Price (₱/kg)</label>
+                                <input type="number" id="sale-price" inputmode="decimal" step="0.01" min="0" required placeholder="e.g., 110.00" oninput="updateSalePreview()" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <div>
+                                <label for="sale-buyer" class="block text-xs font-semibold text-slate-600 mb-1">Buyer / Market Destination</label>
+                                <input type="text" id="sale-buyer" list="buyer-suggestions" required placeholder="e.g., Ormoc Public Market" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none">
+                                <datalist id="buyer-suggestions">
+                                    <option value="Public Market">
+                                    <option value="Wholesaler / Viajero">
+                                    <option value="Farmgate Walk-in">
+                                    <option value="Local Restaurant / Hotel">
+                                    <option value="Supermarket Consignment">
+                                </datalist>
+                            </div>
+                            <div>
+                                <label for="sale-payment" class="block text-xs font-semibold text-slate-600 mb-1">Payment Status</label>
+                                <select id="sale-payment" required class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none bg-white">
+                                    <option value="Paid (Cash)">Paid (Cash)</option>
+                                    <option value="Paid (GCash / Bank)">Paid (GCash / Bank)</option>
+                                    <option value="Credit / Utang">Credit / Utang (Collectible)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="bg-blue-50/70 border border-blue-100 rounded-xl px-4 py-3 flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase text-blue-800">Total Sale Amount</span>
+                            <span id="sale-total-preview" class="text-lg font-extrabold text-blue-900">₱0.00</span>
+                        </div>
+
+                        <button type="submit" class="w-full min-h-[46px] py-3 px-4 rounded-xl bg-blue-700 hover:bg-blue-800 active:bg-blue-900 text-white font-bold text-sm shadow-sm flex items-center justify-center gap-2 transition cursor-pointer">
+                            <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                            <span>Record Sale &amp; Deduct Stock</span>
+                        </button>
+                    </form>
+
+                    <!-- FORM 3: RECORD SPOILAGE / SHRINKAGE -->
+                    <form id="form-spoilage" class="space-y-4 hidden">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <div>
+                                <label for="spoilage-date" class="block text-xs font-semibold text-slate-600 mb-1">Date Recorded</label>
+                                <input type="date" id="spoilage-date" required class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-rose-600 focus:ring-2 focus:ring-rose-600/20 outline-none bg-white">
+                            </div>
+                            <div>
+                                <label for="spoilage-stock-key" class="block text-xs font-semibold text-slate-600 mb-1">Select Available Stock</label>
+                                <select id="spoilage-stock-key" required onchange="onSpoilageStockChange()" class="available-stock-select w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-rose-600 focus:ring-2 focus:ring-rose-600/20 outline-none bg-white"></select>
+                            </div>
+                        </div>
+
+                        <div class="text-xs font-medium px-3.5 py-2.5 rounded-xl bg-rose-50 text-rose-800 border border-rose-100 flex items-center justify-between">
+                            <span>Available on hand:</span>
+                            <span id="spoilage-available-badge" class="font-bold">0.0 kg</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <div>
+                                <label for="spoilage-qty" class="block text-xs font-semibold text-slate-600 mb-1">Spoiled / Lost Weight (kg)</label>
+                                <input type="number" id="spoilage-qty" inputmode="decimal" step="0.1" min="0.1" required placeholder="e.g., 2.5" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-rose-600 focus:ring-2 focus:ring-rose-600/20 outline-none">
+                            </div>
+                            <div>
+                                <label for="spoilage-reason" class="block text-xs font-semibold text-slate-600 mb-1">Cause / Reason</label>
+                                <select id="spoilage-reason" required class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-rose-600 focus:ring-2 focus:ring-rose-600/20 outline-none bg-white">
+                                    <option value="Overripe / Rot">Overripe / Rot</option>
+                                    <option value="Pest / Insect Damage">Pest / Insect Damage</option>
+                                    <option value="Transport / Crate Bruising">Transport / Crate Bruising</option>
+                                    <option value="Moisture / Weight Shrinkage">Moisture / Weight Shrinkage</option>
+                                    <option value="Weather / Sunscald">Weather / Sunscald</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="spoilage-notes" class="block text-xs font-semibold text-slate-600 mb-1">Additional Remarks</label>
+                            <input type="text" id="spoilage-notes" placeholder="e.g., Bottom crate damaged during transit" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-rose-600 focus:ring-2 focus:ring-rose-600/20 outline-none">
+                        </div>
+
+                        <button type="submit" class="w-full min-h-[46px] py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-bold text-sm shadow-sm flex items-center justify-center gap-2 transition cursor-pointer">
+                            <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                            <span>Log Spoilage &amp; Adjust Stock</span>
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Right Column: Live Stock Overview Table -->
+            <section class="lg:col-span-7 bg-white rounded-2xl shadow-xs border border-earth-200/80 print-shadow-none overflow-hidden">
+                <div class="bg-earth-100/70 px-4 sm:px-5 py-4 border-b border-earth-200/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i data-lucide="warehouse" class="w-5 h-5 text-farm-800"></i>
+                            Live Inventory Balances
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Real-time stock on hand grouped by Vegetable &amp; Grade</p>
+                    </div>
+                    <span id="last-updated-label" class="text-[11px] font-medium text-slate-500 bg-white px-2.5 py-1 rounded-lg border border-slate-200 self-start sm:self-auto">Auto-saved locally</span>
+                </div>
+
+                <div class="table-scroll-wrap">
+                    <table class="w-full min-w-[680px] text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/90 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                <th class="py-3.5 px-4">Crop &amp; Grade</th>
+                                <th class="py-3.5 px-3 text-right">Harvested</th>
+                                <th class="py-3.5 px-3 text-right">Sold</th>
+                                <th class="py-3.5 px-3 text-right">Spoiled</th>
+                                <th class="py-3.5 px-3 text-right">On Hand</th>
+                                <th class="py-3.5 px-3 text-right">Est. Value</th>
+                                <th class="py-3.5 px-3 text-center">Status</th>
+                                <th class="py-3.5 px-4 text-center admin-only-control no-print">Reset Crop</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stock-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                    </table>
+                </div>
+
+                <div id="stock-empty-state" class="hidden py-12 px-6 text-center">
+                    <div class="w-12 h-12 rounded-2xl bg-farm-50 text-farm-700 flex items-center justify-center mx-auto mb-3">
+                        <i data-lucide="sprout" class="w-6 h-6"></i>
+                    </div>
+                    <h4 class="text-sm font-bold text-slate-800">No Harvest Records Yet</h4>
+                    <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-4">Record your first harvest on the left panel or load sample farm data to explore Tyler's Integrated Farm inventory.</p>
+                    <button type="button" onclick="loadSampleData()" class="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-farm-100 hover:bg-farm-200 active:bg-farm-300 text-farm-900 text-xs font-bold transition cursor-pointer">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Load Sample Harvest Data
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <!-- Transaction History Log & Filtering (Admin Only) -->
+        <section id="history-log-section" class="admin-only-control bg-white rounded-2xl shadow-xs border border-earth-200/80 print-shadow-none overflow-hidden">
+            <div class="bg-earth-100/70 px-4 sm:px-5 py-4 border-b border-earth-200/80 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="history" class="w-5 h-5 text-farm-800"></i>
+                        Transaction &amp; Movement Log
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Complete audit trail of harvests, market sales, and shrinkage (Admin Only)</p>
+                </div>
+
+                <!-- Filters -->
+                <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 no-print">
+                    <div class="relative flex-1 sm:flex-initial sm:min-w-[210px]">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                        <input type="text" id="filter-search" oninput="renderAll()" placeholder="Search buyer, plot, notes..." aria-label="Search transactions" class="w-full min-h-[44px] pl-9 pr-3 py-2 rounded-xl border border-slate-200 bg-white focus:border-farm-600 outline-none">
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:flex gap-2.5">
+                        <select id="filter-type" onchange="renderAll()" aria-label="Filter by transaction type" class="min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-700 focus:border-farm-600 outline-none">
+                            <option value="ALL">All Types</option>
+                            <option value="HARVEST">Harvest (In)</option>
+                            <option value="SALE">Sales (Out)</option>
+                            <option value="SPOILAGE">Spoilage (Loss)</option>
+                        </select>
+
+                        <select id="filter-crop" onchange="renderAll()" aria-label="Filter by crop" class="min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-700 focus:border-farm-600 outline-none">
+                            <option value="ALL">All Crops</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-scroll-wrap">
+                <table class="w-full min-w-[700px] text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/90 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                            <th class="py-3.5 px-4">Date</th>
+                            <th class="py-3.5 px-3">Type</th>
+                            <th class="py-3.5 px-3">Crop &amp; Grade</th>
+                            <th class="py-3.5 px-3 text-right">Weight (kg)</th>
+                            <th class="py-3.5 px-3 text-right">Rate / Total</th>
+                            <th class="py-3.5 px-4">Buyer / Notes / Payment</th>
+                            <th class="py-3.5 px-4 text-center no-print">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                </table>
+            </div>
+
+            <div id="history-empty-state" class="hidden py-10 px-6 text-center text-xs text-slate-500">
+                No matching transactions found for the selected filters.
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-earth-200/80 py-4 px-4 sm:px-6 lg:px-8 mt-8">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 text-center sm:text-left">
+            <p class="font-medium text-slate-700">Tyler's Integrated Farm &bull; Vegetable Harvest &amp; Inventory Management System</p>
+            <p>Data stored locally on your device (<code class="text-[11px] bg-slate-100 px-1.5 py-0.5 rounded">localStorage</code>). Export CSV/JSON regularly for backup.</p>
+        </div>
+    </footer>
+
+    <script>
+        const ROLE_STORAGE_KEY = 'tylers_farm_active_role_v1';
+        const ADMIN_PASSWORD_STORAGE_KEY = 'tylers_farm_admin_password_v1';
+        const DEFAULT_ADMIN_PIN = '1234';
+        let activeRole = 'user';
+
+        function getAdminPassword() {
+            const saved = safeGetStorage(ADMIN_PASSWORD_STORAGE_KEY);
+            return (saved && saved.trim().length > 0) ? saved : DEFAULT_ADMIN_PIN;
+        }
+
+        function setAdminPassword(newPw) {
+            safeSetStorage(ADMIN_PASSWORD_STORAGE_KEY, newPw);
+        }
+
+        function getActiveRole() {
+            const saved = safeGetStorage(ROLE_STORAGE_KEY);
+            return (saved === 'user' || saved === 'admin') ? saved : 'user';
+        }
+
+        function applyRolePermissions() {
+            const isAdmin = activeRole === 'admin';
+
+            const pill = document.getElementById('role-pill');
+            const label = document.getElementById('role-label');
+            const desc = document.getElementById('role-desc');
+            const btnUser = document.getElementById('btn-switch-user');
+            const btnAdmin = document.getElementById('btn-switch-admin');
+
+            if (isAdmin) {
+                pill.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold text-[11px] bg-emerald-500/20 text-emerald-200 border border-emerald-400/30';
+                label.textContent = 'ADMIN MODE';
+                desc.textContent = 'Full access: harvest, sale, spoilage, transaction log, per-crop reset, add crop, delete & backup tools.';
+                btnUser.classList.remove('hidden');
+                btnAdmin.classList.add('hidden');
+            } else {
+                pill.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold text-[11px] bg-sky-500/20 text-sky-200 border border-sky-400/30';
+                label.textContent = 'USER MODE';
+                desc.textContent = 'Standard user access: can record stock movements; transaction log & admin actions locked.';
+                btnUser.classList.add('hidden');
+                btnAdmin.classList.remove('hidden');
+            }
+
+            const adminOnlyEls = document.querySelectorAll('.admin-only-control');
+            adminOnlyEls.forEach(el => {
+                el.classList.toggle('hidden', !isAdmin);
+            });
+
+            if (!isAdmin) {
+                document.getElementById('backup-dropdown').classList.add('hidden');
+                document.getElementById('backup-menu-btn').setAttribute('aria-expanded', 'false');
+                closeCropModal();
+                closeAdminPasswordSettingsModal();
+                closeEditTxModal();
+            }
+        }
+
+        function switchToUserRole() {
+            activeRole = 'user';
+            safeSetStorage(ROLE_STORAGE_KEY, 'user');
+            applyRolePermissions();
+            renderAll();
+            showToast('Switched to User Mode. Transaction log & admin controls are hidden.', 'warning');
+        }
+
+        function openAdminModal() {
+            document.getElementById('admin-pin-input').value = '';
+            const modal = document.getElementById('admin-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => document.getElementById('admin-pin-input').focus(), 50);
+        }
+
+        function closeAdminModal() {
+            const modal = document.getElementById('admin-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        document.getElementById('admin-pin-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const pin = document.getElementById('admin-pin-input').value.trim();
+            if (pin === getAdminPassword()) {
+                activeRole = 'admin';
+                safeSetStorage(ROLE_STORAGE_KEY, 'admin');
+                closeAdminModal();
+                    closeAdminPasswordSettingsModal();
+                    closeResetPasswordModal();
+                    closeEditTxModal();
+                applyRolePermissions();
+                renderAll();
+                showToast('Switched to Admin Mode.', 'success');
+            } else {
+                showToast('Incorrect Admin Password / PIN.', 'error');
+            }
+        });
+
+        const STORAGE_KEYS = {
+            CROPS: 'tylers_farm_crops_v1',
+            TRANSACTIONS: 'tylers_farm_tx_v1'
+        };
+
+        const DEFAULT_CROPS = [
+            { id: 'crop-atsal', name: 'Bell Pepper (Atsal)', defaultPrice: 120.00, lowStockThreshold: 15 },
+            { id: 'crop-pakwan', name: 'Watermelon (Pakwan)', defaultPrice: 35.00, lowStockThreshold: 50 },
+            { id: 'crop-talong', name: 'Eggplant (Talong)', defaultPrice: 55.00, lowStockThreshold: 20 }
+        ];
+
+        let crops = [];
+        let transactions = [];
+        let confirmCallback = null;
+
+        function getLocalTodayDateString() {
+            const now = new Date();
+            const offsetMs = now.getTimezoneOffset() * 60000;
+            return new Date(now.getTime() - offsetMs).toISOString().split('T')[0];
+        }
+
+        function safeGetStorage(key) {
+            try {
+                return window.localStorage.getItem(key);
+            } catch (err) {
+                return null;
+            }
+        }
+
+        function safeSetStorage(key, value) {
+            try {
+                window.localStorage.setItem(key, value);
+                return true;
+            } catch (err) {
+                return false;
+            }
+        }
+
+        function openAdminPasswordSettingsModal() {
+            if (activeRole !== 'admin') {
+                showToast('Admin access required to change admin password.', 'error');
+                return;
+            }
+            document.getElementById('backup-dropdown').classList.add('hidden');
+            document.getElementById('backup-menu-btn').setAttribute('aria-expanded', 'false');
+            document.getElementById('current-admin-pw-input').value = '';
+            document.getElementById('new-admin-pw-input').value = '';
+            document.getElementById('confirm-admin-pw-input').value = '';
+            const msgBox = document.getElementById('admin-pw-settings-popup-msg');
+            if (msgBox) {
+                msgBox.textContent = '';
+                msgBox.className = 'hidden text-xs font-semibold px-3 py-2 rounded-xl mb-3 border';
+            }
+            const modal = document.getElementById('admin-password-settings-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => document.getElementById('current-admin-pw-input').focus(), 50);
+            lucide.createIcons();
+        }
+
+        function closeAdminPasswordSettingsModal() {
+            const modal = document.getElementById('admin-password-settings-modal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function showAdminPwSettingsPopupMessage(msg, isError = true) {
+            const box = document.getElementById('admin-pw-settings-popup-msg');
+            if (!box) return;
+            box.textContent = msg;
+            box.className = isError
+                ? 'text-xs font-semibold px-3 py-2 rounded-xl mb-3 border bg-rose-50 text-rose-700 border-rose-200'
+                : 'text-xs font-semibold px-3 py-2 rounded-xl mb-3 border bg-emerald-50 text-emerald-700 border-emerald-200';
+            box.classList.remove('hidden');
+        }
+
+        function resetAdminPasswordToDefault() {
+            if (activeRole !== 'admin') {
+                showToast('Admin access required.', 'error');
+                return;
+            }
+            setAdminPassword(DEFAULT_ADMIN_PIN);
+            showAdminPwSettingsPopupMessage('Admin password reset to default (1234).', false);
+            showToast('Admin password reset to 1234.', 'success');
+        }
+
+        document.getElementById('admin-password-settings-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (activeRole !== 'admin') {
+                showToast('Admin access required.', 'error');
+                return;
+            }
+            const currentPw = document.getElementById('current-admin-pw-input').value.trim();
+            const newPw = document.getElementById('new-admin-pw-input').value.trim();
+            const confirmPw = document.getElementById('confirm-admin-pw-input').value.trim();
+
+            if (currentPw !== getAdminPassword()) {
+                showAdminPwSettingsPopupMessage('Sayop ang current admin password!', true);
+                showToast('Current password is incorrect.', 'error');
+                return;
+            }
+            if (newPw.length < 4) {
+                showAdminPwSettingsPopupMessage('Ang bag-ong password kinahanglan labing menos 4 ka karakter.', true);
+                showToast('New password must be at least 4 characters.', 'error');
+                return;
+            }
+            if (newPw !== confirmPw) {
+                showAdminPwSettingsPopupMessage('Wala magkapareho ang bag-ong password ug confirm password.', true);
+                showToast('New passwords do not match.', 'error');
+                return;
+            }
+
+            setAdminPassword(newPw);
+            closeAdminPasswordSettingsModal();
+            showToast('Na-save na ang bag-ong Admin password!', 'success');
+        });
+
+        function initApp() {
+            try {
+                const savedCrops = safeGetStorage(STORAGE_KEYS.CROPS);
+                const savedTx = safeGetStorage(STORAGE_KEYS.TRANSACTIONS);
+
+                crops = savedCrops ? JSON.parse(savedCrops) : [...DEFAULT_CROPS];
+                transactions = savedTx ? JSON.parse(savedTx) : [];
+
+                if (!savedCrops) {
+                    saveCrops();
+                }
+            } catch (err) {
+                console.error('Error loading from localStorage:', err);
+                crops = [...DEFAULT_CROPS];
+                transactions = [];
+                showToast('Private/incognito mode or storage restricted; changes stay in session.', 'warning');
+            }
+
+            const today = getLocalTodayDateString();
+            document.getElementById('harvest-date').value = today;
+            document.getElementById('sale-date').value = today;
+            document.getElementById('spoilage-date').value = today;
+
+            activeRole = getActiveRole();
+            safeSetStorage(ROLE_STORAGE_KEY, activeRole);
+            applyRolePermissions();
+
+            populateCropDropdowns();
+            autoFillHarvestPrice();
+            renderAll();
+            lucide.createIcons();
+
+            document.addEventListener('click', (e) => {
+                const btn = document.getElementById('backup-menu-btn');
+                const menu = document.getElementById('backup-dropdown');
+                if (btn && menu && !btn.contains(e.target) && !menu.contains(e.target)) {
+                    menu.classList.add('hidden');
+                    btn.setAttribute('aria-expanded', 'false');
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeCropModal();
+                closeAdminPasswordSettingsModal();
+                closeEditTxModal();
+                    closeAdminModal();
+                    closeAdminPasswordSettingsModal();
+                    closeResetPasswordModal();
+                    closeEditTxModal();
+                    closeConfirmModal();
+                    const menu = document.getElementById('backup-dropdown');
+                    const btn = document.getElementById('backup-menu-btn');
+                    if (menu && !menu.classList.contains('hidden')) {
+                        menu.classList.add('hidden');
+                        if (btn) btn.setAttribute('aria-expanded', 'false');
+                    }
+                }
+            });
+        }
+
+        function saveCrops() {
+            const ok = safeSetStorage(STORAGE_KEYS.CROPS, JSON.stringify(crops));
+            if (!ok) {
+                showToast('Storage full or restricted: crop profile kept for current session.', 'warning');
+            }
+        }
+
+        function saveTransactions() {
+            const ok = safeSetStorage(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
+            const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('last-updated-label').textContent = ok
+                ? `Saved at ${now}`
+                : `Session only (${now})`;
+            if (!ok) {
+                showToast('Storage full or restricted: export CSV/JSON to keep your data.', 'warning');
+            }
+        }
+
+        function formatPHP(amount) {
+            const num = Number(amount) || 0;
+            return '₱' + num.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatKg(kg) {
+            const num = Number(kg) || 0;
+            return num.toLocaleString('en-PH', { minimumFractionDigits: 1, maximumFractionDigits: 2 }) + ' kg';
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function computeInventorySummary() {
+            const stockMap = new Map();
+
+            let totalHarvestedKg = 0;
+            let totalSoldKg = 0;
+            let totalSoldRevenue = 0;
+            let totalSpoiledKg = 0;
+
+            const sortedTx = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            sortedTx.forEach(tx => {
+                const key = `${tx.cropId}::${tx.grade}`;
+                const cropObj = crops.find(c => c.id === tx.cropId);
+                const cropName = tx.cropName || (cropObj ? cropObj.name : 'Unknown Crop');
+                const defaultPrice = cropObj ? cropObj.defaultPrice : 0;
+                const threshold = cropObj ? cropObj.lowStockThreshold : 15;
+
+                if (!stockMap.has(key)) {
+                    stockMap.set(key, {
+                        key,
+                        cropId: tx.cropId,
+                        cropName,
+                        grade: tx.grade,
+                        harvestedKg: 0,
+                        soldKg: 0,
+                        spoiledKg: 0,
+                        availableKg: 0,
+                        latestFarmgatePrice: defaultPrice,
+                        lowStockThreshold: threshold
+                    });
+                }
+
+                const entry = stockMap.get(key);
+                const qty = Number(tx.qty) || 0;
+
+                if (tx.type === 'HARVEST') {
+                    entry.harvestedKg += qty;
+                    entry.availableKg += qty;
+                    if (tx.unitPrice > 0) {
+                        entry.latestFarmgatePrice = Number(tx.unitPrice);
+                    }
+                    totalHarvestedKg += qty;
+                } else if (tx.type === 'SALE') {
+                    entry.soldKg += qty;
+                    entry.availableKg -= qty;
+                    totalSoldKg += qty;
+                    totalSoldRevenue += qty * (Number(tx.unitPrice) || 0);
+                } else if (tx.type === 'SPOILAGE') {
+                    entry.spoiledKg += qty;
+                    entry.availableKg -= qty;
+                    totalSpoiledKg += qty;
+                }
+            });
+
+            let totalAvailableKg = 0;
+            let totalEstimatedValue = 0;
+            let activeBatchCount = 0;
+
+            const stockList = Array.from(stockMap.values()).map(item => {
+                item.availableKg = Math.max(0, Math.round(item.availableKg * 100) / 100);
+                item.harvestedKg = Math.round(item.harvestedKg * 100) / 100;
+                item.soldKg = Math.round(item.soldKg * 100) / 100;
+                item.spoiledKg = Math.round(item.spoiledKg * 100) / 100;
+                item.estimatedValue = item.availableKg * item.latestFarmgatePrice;
+
+                totalAvailableKg += item.availableKg;
+                totalEstimatedValue += item.estimatedValue;
+                if (item.availableKg > 0) activeBatchCount++;
+
+                return item;
+            });
+
+            stockList.sort((a, b) => a.cropName.localeCompare(b.cropName) || a.grade.localeCompare(b.grade));
+
+            return {
+                stockList,
+                stockMap,
+                totalHarvestedKg,
+                totalAvailableKg,
+                totalEstimatedValue,
+                totalSoldKg,
+                totalSoldRevenue,
+                totalSpoiledKg,
+                activeBatchCount
+            };
+        }
+
+        function renderAll() {
+            const summary = computeInventorySummary();
+
+            document.getElementById('kpi-available-kg').textContent = formatKg(summary.totalAvailableKg);
+            document.getElementById('kpi-crop-count').textContent = `Across ${summary.activeBatchCount} active batch${summary.activeBatchCount === 1 ? '' : 'es'}`;
+            document.getElementById('kpi-stock-value').textContent = formatPHP(summary.totalEstimatedValue);
+            document.getElementById('kpi-sold-revenue').textContent = formatPHP(summary.totalSoldRevenue);
+            document.getElementById('kpi-sold-kg').textContent = `${formatKg(summary.totalSoldKg)} dispatched`;
+            document.getElementById('kpi-spoilage-kg').textContent = formatKg(summary.totalSpoiledKg);
+
+            const spoilageRate = summary.totalHarvestedKg > 0
+                ? ((summary.totalSpoiledKg / summary.totalHarvestedKg) * 100).toFixed(1)
+                : '0.0';
+            document.getElementById('kpi-spoilage-rate').textContent = `${spoilageRate}% of total harvest`;
+
+            renderStockTable(summary.stockList);
+            populateAvailableStockDropdowns(summary.stockList);
+            renderHistoryTable();
+            applyRolePermissions();
+
+            lucide.createIcons();
+        }
+
+        function renderStockTable(stockList) {
+            const tbody = document.getElementById('stock-table-body');
+            const emptyState = document.getElementById('stock-empty-state');
+
+            if (stockList.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            tbody.innerHTML = stockList.map(item => {
+                let statusBadge = '';
+                if (item.availableKg <= 0) {
+                    statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600 whitespace-nowrap">Out of Stock</span>`;
+                } else if (item.availableKg <= item.lowStockThreshold) {
+                    statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 whitespace-nowrap">Low Stock</span>`;
+                } else {
+                    statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 whitespace-nowrap">In Stock</span>`;
+                }
+
+                const gradeColor = item.grade.includes('Class A')
+                    ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                    : item.grade.includes('Class B')
+                        ? 'text-amber-700 bg-amber-50 border-amber-200'
+                        : 'text-slate-600 bg-slate-100 border-slate-200';
+
+                return `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-3.5 px-4">
+                            <div class="font-bold text-slate-900">${escapeHTML(item.cropName)}</div>
+                            <span class="inline-block mt-1 px-2 py-0.5 text-[11px] font-semibold rounded-md border ${gradeColor}">${escapeHTML(item.grade)}</span>
+                        </td>
+                        <td class="py-3.5 px-3 text-right text-slate-600 font-medium whitespace-nowrap">${formatKg(item.harvestedKg)}</td>
+                        <td class="py-3.5 px-3 text-right text-blue-700 font-medium whitespace-nowrap">${formatKg(item.soldKg)}</td>
+                        <td class="py-3.5 px-3 text-right text-rose-600 font-medium whitespace-nowrap">${formatKg(item.spoiledKg)}</td>
+                        <td class="py-3.5 px-3 text-right font-extrabold text-slate-900 whitespace-nowrap">${formatKg(item.availableKg)}</td>
+                        <td class="py-3.5 px-3 text-right font-bold text-emerald-700 whitespace-nowrap">
+                            ${formatPHP(item.estimatedValue)}
+                            <div class="text-[10px] font-normal text-slate-400">@ ${formatPHP(item.latestFarmgatePrice)}/kg</div>
+                        </td>
+                        <td class="py-3.5 px-3 text-center">${statusBadge}</td>
+                        <td class="py-3.5 px-4 text-center admin-only-control no-print">
+                            <button type="button" onclick="confirmResetCrop('${escapeHTML(item.cropId)}', '${escapeHTML(item.cropName)}')" aria-label="Password protected reset all ${escapeHTML(item.cropName)}" class="min-h-[36px] px-2.5 py-1 rounded-lg text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 border border-rose-200 inline-flex items-center gap-1 transition cursor-pointer" title="Password-protected reset for this crop's records">
+                                <i data-lucide="lock" class="w-3 h-3"></i>
+                                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                                <span>Reset</span>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderHistoryTable() {
+            if (activeRole !== 'admin') return;
+            const tbody = document.getElementById('history-table-body');
+            const emptyState = document.getElementById('history-empty-state');
+
+            const searchFilter = document.getElementById('filter-search').value.trim().toLowerCase();
+            const typeFilter = document.getElementById('filter-type').value;
+            const cropFilter = document.getElementById('filter-crop').value;
+
+            const sorted = [...transactions].sort((a, b) => {
+                const dateDiff = new Date(b.date) - new Date(a.date);
+                return dateDiff !== 0 ? dateDiff : (b.createdAt || 0) - (a.createdAt || 0);
+            });
+
+            const filtered = sorted.filter(tx => {
+                if (typeFilter !== 'ALL' && tx.type !== typeFilter) return false;
+                if (cropFilter !== 'ALL' && tx.cropId !== cropFilter) return false;
+                if (searchFilter) {
+                    const haystack = `${tx.cropName} ${tx.grade} ${tx.buyer || ''} ${tx.notes || ''} ${tx.paymentStatus || ''} ${tx.reason || ''}`.toLowerCase();
+                    if (!haystack.includes(searchFilter)) return false;
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            tbody.innerHTML = filtered.map(tx => {
+                let typeBadge = '';
+                let qtyDisplay = '';
+                let financialDisplay = '—';
+                let detailsDisplay = '';
+
+                if (tx.type === 'HARVEST') {
+                    typeBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-farm-100 text-farm-900"><i data-lucide="arrow-down-left" class="w-3.5 h-3.5"></i> Harvest</span>`;
+                    qtyDisplay = `<span class="font-bold text-farm-800">+${formatKg(tx.qty)}</span>`;
+                    const batchVal = (tx.qty || 0) * (tx.unitPrice || 0);
+                    financialDisplay = `<div class="font-semibold text-slate-800">${formatPHP(batchVal)}</div><div class="text-[11px] text-slate-400">Farmgate @ ${formatPHP(tx.unitPrice)}/kg</div>`;
+                    detailsDisplay = tx.notes ? `<span class="text-slate-700">${escapeHTML(tx.notes)}</span>` : `<span class="text-slate-400 italic">No batch notes</span>`;
+                } else if (tx.type === 'SALE') {
+                    typeBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-100 text-blue-800"><i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i> Sale</span>`;
+                    qtyDisplay = `<span class="font-bold text-blue-700">-${formatKg(tx.qty)}</span>`;
+                    const saleVal = (tx.qty || 0) * (tx.unitPrice || 0);
+                    financialDisplay = `<div class="font-bold text-blue-800">${formatPHP(saleVal)}</div><div class="text-[11px] text-slate-400">Sold @ ${formatPHP(tx.unitPrice)}/kg</div>`;
+
+                    const payBadgeColor = tx.paymentStatus && tx.paymentStatus.includes('Credit')
+                        ? 'bg-amber-100 text-amber-800 border-amber-200'
+                        : 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                    detailsDisplay = `
+                        <div class="font-semibold text-slate-800">${escapeHTML(tx.buyer || 'Walk-in Buyer')}</div>
+                        <span class="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold rounded border ${payBadgeColor}">${escapeHTML(tx.paymentStatus || 'Paid')}</span>
+                    `;
+                } else if (tx.type === 'SPOILAGE') {
+                    typeBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-100 text-rose-800"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Spoilage</span>`;
+                    qtyDisplay = `<span class="font-bold text-rose-600">-${formatKg(tx.qty)}</span>`;
+                    financialDisplay = `<span class="text-xs text-rose-600 font-medium">Shrinkage Loss</span>`;
+                    detailsDisplay = `
+                        <div class="font-semibold text-rose-700">${escapeHTML(tx.reason || 'Damaged')}</div>
+                        ${tx.notes ? `<div class="text-xs text-slate-500">${escapeHTML(tx.notes)}</div>` : ''}
+                    `;
+                }
+
+                return `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-3.5 px-4 whitespace-nowrap text-xs font-semibold text-slate-700">${escapeHTML(tx.date)}</td>
+                        <td class="py-3.5 px-3 whitespace-nowrap">${typeBadge}</td>
+                        <td class="py-3.5 px-3">
+                            <div class="font-bold text-slate-900">${escapeHTML(tx.cropName)}</div>
+                            <div class="text-xs text-slate-500">${escapeHTML(tx.grade)}</div>
+                        </td>
+                        <td class="py-3.5 px-3 text-right whitespace-nowrap">${qtyDisplay}</td>
+                        <td class="py-3.5 px-3 text-right whitespace-nowrap">${financialDisplay}</td>
+                        <td class="py-3.5 px-4 text-xs">${detailsDisplay}</td>
+                        <td class="py-3.5 px-4 text-center no-print">
+                            <div class="inline-flex items-center justify-center gap-1 admin-only-control">
+                                <button type="button" onclick="openEditTransactionModal('${tx.id}')" aria-label="Edit entry" class="min-w-[38px] min-h-[38px] inline-flex items-center justify-center text-slate-500 hover:text-amber-700 hover:bg-amber-50 active:bg-amber-100 rounded-xl transition cursor-pointer" title="Edit Entry">
+                                    <i data-lucide="pencil" class="w-4 h-4"></i>
+                                </button>
+                                <button type="button" onclick="confirmDeleteTransaction('${tx.id}')" aria-label="Delete entry" class="min-w-[38px] min-h-[38px] inline-flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 active:bg-rose-100 rounded-xl transition cursor-pointer" title="Delete Entry">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function populateCropDropdowns() {
+            const harvestCropSelect = document.getElementById('harvest-crop');
+            const filterCropSelect = document.getElementById('filter-crop');
+
+            const prevHarvestCrop = harvestCropSelect.value;
+            const prevFilterCrop = filterCropSelect.value;
+
+            const optionsHTML = crops.map(c => `<option value="${c.id}">${escapeHTML(c.name)}</option>`).join('');
+            harvestCropSelect.innerHTML = optionsHTML;
+            filterCropSelect.innerHTML = `<option value="ALL">All Crops</option>` + optionsHTML;
+
+            if (crops.some(c => c.id === prevHarvestCrop)) harvestCropSelect.value = prevHarvestCrop;
+            if (prevFilterCrop === 'ALL' || crops.some(c => c.id === prevFilterCrop)) {
+                filterCropSelect.value = prevFilterCrop || 'ALL';
+            }
+        }
+
+        function populateAvailableStockDropdowns(stockList) {
+            const availableItems = stockList.filter(item => item.availableKg > 0);
+            const saleSelect = document.getElementById('sale-stock-key');
+            const spoilageSelect = document.getElementById('spoilage-stock-key');
+
+            const prevSaleVal = saleSelect.value;
+            const prevSpoilageVal = spoilageSelect.value;
+
+            if (availableItems.length === 0) {
+                const emptyOpt = `<option value="">-- No stock available on hand --</option>`;
+                saleSelect.innerHTML = emptyOpt;
+                spoilageSelect.innerHTML = emptyOpt;
+            } else {
+                const opts = availableItems.map(item =>
+                    `<option value="${item.key}">${escapeHTML(item.cropName)} — ${escapeHTML(item.grade)} (${formatKg(item.availableKg)})</option>`
+                ).join('');
+                saleSelect.innerHTML = opts;
+                spoilageSelect.innerHTML = opts;
+
+                if (availableItems.some(i => i.key === prevSaleVal)) saleSelect.value = prevSaleVal;
+                if (availableItems.some(i => i.key === prevSpoilageVal)) spoilageSelect.value = prevSpoilageVal;
+            }
+
+            onSaleStockChange();
+            onSpoilageStockChange();
+        }
+
+        function switchMode(mode) {
+            const tabs = ['harvest', 'sale', 'spoilage'];
+            const activeStyles = {
+                harvest: ['bg-farm-800', 'text-white', 'shadow-xs'],
+                sale: ['bg-blue-700', 'text-white', 'shadow-xs'],
+                spoilage: ['bg-rose-600', 'text-white', 'shadow-xs']
+            };
+
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                const form = document.getElementById(`form-${t}`);
+
+                btn.className = 'mode-tab min-h-[44px] flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs font-bold transition cursor-pointer';
+                if (t === mode) {
+                    btn.setAttribute('aria-selected', 'true');
+                    btn.classList.add(...activeStyles[t]);
+                    form.classList.remove('hidden');
+                } else {
+                    btn.setAttribute('aria-selected', 'false');
+                    btn.classList.add('text-slate-600', 'hover:bg-white');
+                    form.classList.add('hidden');
+                }
+            });
+        }
+
+        function autoFillHarvestPrice() {
+            const cropId = document.getElementById('harvest-crop').value;
+            const crop = crops.find(c => c.id === cropId);
+            if (crop) {
+                document.getElementById('harvest-price').value = Number(crop.defaultPrice || 0).toFixed(2);
+                updateHarvestPreview();
+            }
+        }
+
+        function updateHarvestPreview() {
+            const qty = parseFloat(document.getElementById('harvest-qty').value) || 0;
+            const price = parseFloat(document.getElementById('harvest-price').value) || 0;
+            document.getElementById('harvest-total-preview').textContent = formatPHP(qty * price);
+        }
+
+        function onSaleStockChange() {
+            const key = document.getElementById('sale-stock-key').value;
+            const summary = computeInventorySummary();
+            const item = summary.stockMap.get(key);
+
+            if (item && item.availableKg > 0) {
+                document.getElementById('sale-available-badge').textContent = formatKg(item.availableKg);
+                document.getElementById('sale-qty').max = item.availableKg;
+                if (!document.getElementById('sale-price').value) {
+                    document.getElementById('sale-price').value = (item.latestFarmgatePrice * 1.15).toFixed(2);
+                }
+            } else {
+                document.getElementById('sale-available-badge').textContent = '0.0 kg';
+                document.getElementById('sale-qty').removeAttribute('max');
+            }
+            updateSalePreview();
+        }
+
+        function updateSalePreview() {
+            const qty = parseFloat(document.getElementById('sale-qty').value) || 0;
+            const price = parseFloat(document.getElementById('sale-price').value) || 0;
+            document.getElementById('sale-total-preview').textContent = formatPHP(qty * price);
+        }
+
+        function onSpoilageStockChange() {
+            const key = document.getElementById('spoilage-stock-key').value;
+            const summary = computeInventorySummary();
+            const item = summary.stockMap.get(key);
+
+            if (item && item.availableKg > 0) {
+                document.getElementById('spoilage-available-badge').textContent = formatKg(item.availableKg);
+                document.getElementById('spoilage-qty').max = item.availableKg;
+            } else {
+                document.getElementById('spoilage-available-badge').textContent = '0.0 kg';
+                document.getElementById('spoilage-qty').removeAttribute('max');
+            }
+        }
+
+        document.getElementById('form-harvest').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const date = document.getElementById('harvest-date').value;
+            const cropId = document.getElementById('harvest-crop').value;
+            const grade = document.getElementById('harvest-grade').value;
+            const qty = parseFloat(document.getElementById('harvest-qty').value);
+            const unitPrice = parseFloat(document.getElementById('harvest-price').value);
+            const notes = document.getElementById('harvest-notes').value.trim();
+
+            const crop = crops.find(c => c.id === cropId);
+            if (!crop || isNaN(qty) || qty <= 0) {
+                showToast('Please enter a valid harvest weight.', 'error');
+                return;
+            }
+
+            if (!isNaN(unitPrice) && unitPrice > 0) {
+                crop.defaultPrice = unitPrice;
+                saveCrops();
+            }
+
+            transactions.push({
+                id: 'tx-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+                type: 'HARVEST',
+                date,
+                cropId: crop.id,
+                cropName: crop.name,
+                grade,
+                qty: Math.round(qty * 100) / 100,
+                unitPrice: Math.round((unitPrice || 0) * 100) / 100,
+                notes,
+                createdAt: Date.now()
+            });
+
+            saveTransactions();
+            renderAll();
+
+            document.getElementById('harvest-qty').value = '';
+            document.getElementById('harvest-notes').value = '';
+            updateHarvestPreview();
+            showToast(`Added ${formatKg(qty)} of ${crop.name} (${grade}) to stock.`, 'success');
+        });
+
+        document.getElementById('form-sale').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const date = document.getElementById('sale-date').value;
+            const stockKey = document.getElementById('sale-stock-key').value;
+            const qty = parseFloat(document.getElementById('sale-qty').value);
+            const unitPrice = parseFloat(document.getElementById('sale-price').value);
+            const buyer = document.getElementById('sale-buyer').value.trim();
+            const paymentStatus = document.getElementById('sale-payment').value;
+
+            if (!stockKey) {
+                showToast('No available stock selected for sale.', 'error');
+                return;
+            }
+
+            const summary = computeInventorySummary();
+            const item = summary.stockMap.get(stockKey);
+
+            if (!item || qty > item.availableKg + 0.001) {
+                showToast(`Insufficient stock! Only ${formatKg(item ? item.availableKg : 0)} available.`, 'error');
+                return;
+            }
+
+            transactions.push({
+                id: 'tx-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+                type: 'SALE',
+                date,
+                cropId: item.cropId,
+                cropName: item.cropName,
+                grade: item.grade,
+                qty: Math.round(qty * 100) / 100,
+                unitPrice: Math.round((unitPrice || 0) * 100) / 100,
+                buyer,
+                paymentStatus,
+                createdAt: Date.now()
+            });
+
+            saveTransactions();
+            renderAll();
+
+            document.getElementById('sale-qty').value = '';
+            document.getElementById('sale-price').value = '';
+            updateSalePreview();
+            showToast(`Recorded sale of ${formatKg(qty)} ${item.cropName} (${formatPHP(qty * unitPrice)}).`, 'success');
+        });
+
+        document.getElementById('form-spoilage').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const date = document.getElementById('spoilage-date').value;
+            const stockKey = document.getElementById('spoilage-stock-key').value;
+            const qty = parseFloat(document.getElementById('spoilage-qty').value);
+            const reason = document.getElementById('spoilage-reason').value;
+            const notes = document.getElementById('spoilage-notes').value.trim();
+
+            if (!stockKey) {
+                showToast('No available stock selected.', 'error');
+                return;
+            }
+
+            const summary = computeInventorySummary();
+            const item = summary.stockMap.get(stockKey);
+
+            if (!item || qty > item.availableKg + 0.001) {
+                showToast(`Cannot exceed available stock (${formatKg(item ? item.availableKg : 0)}).`, 'error');
+                return;
+            }
+
+            transactions.push({
+                id: 'tx-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+                type: 'SPOILAGE',
+                date,
+                cropId: item.cropId,
+                cropName: item.cropName,
+                grade: item.grade,
+                qty: Math.round(qty * 100) / 100,
+                reason,
+                notes,
+                createdAt: Date.now()
+            });
+
+            saveTransactions();
+            renderAll();
+
+            document.getElementById('spoilage-qty').value = '';
+            document.getElementById('spoilage-notes').value = '';
+            showToast(`Logged ${formatKg(qty)} spoilage for ${item.cropName}.`, 'warning');
+        });
+
+        function openCropModal() {
+            document.getElementById('backup-dropdown').classList.add('hidden');
+            document.getElementById('backup-menu-btn').setAttribute('aria-expanded', 'false');
+            const modal = document.getElementById('crop-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => document.getElementById('new-crop-name').focus(), 50);
+        }
+
+        function closeCropModal() {
+            const modal = document.getElementById('crop-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        document.getElementById('custom-crop-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('new-crop-name').value.trim();
+            const defaultPrice = parseFloat(document.getElementById('new-crop-price').value) || 0;
+            const lowStockThreshold = parseFloat(document.getElementById('new-crop-threshold').value) || 15;
+
+            if (!name) return;
+
+            const exists = crops.some(c => c.name.toLowerCase() === name.toLowerCase());
+            if (exists) {
+                showToast('This crop already exists in your list.', 'error');
+                return;
+            }
+
+            const newCrop = {
+                id: 'crop-' + Date.now(),
+                name,
+                defaultPrice,
+                lowStockThreshold
+            };
+
+            crops.push(newCrop);
+            saveCrops();
+            populateCropDropdowns();
+            document.getElementById('harvest-crop').value = newCrop.id;
+            autoFillHarvestPrice();
+
+            document.getElementById('custom-crop-form').reset();
+            closeCropModal();
+                closeAdminPasswordSettingsModal();
+                closeEditTxModal();
+            showToast(`Added "${name}" to Tyler's Farm crop profiles.`, 'success');
+        });
+
+        function showConfirm(title, message, onConfirm) {
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-message').textContent = message;
+            document.getElementById('reset-grade-picker').classList.add('hidden');
+            confirmCallback = onConfirm;
+
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            confirmCallback = null;
+        }
+
+        document.getElementById('confirm-cancel-btn').addEventListener('click', closeConfirmModal);
+        document.getElementById('confirm-ok-btn').addEventListener('click', () => {
+            if (typeof confirmCallback === 'function') {
+                confirmCallback();
+            }
+            closeConfirmModal();
+        });
+
+
+        let pendingResetAction = null;
+
+        function showResetPopupMessage(msg, isError = true) {
+            const box = document.getElementById('reset-password-popup-msg');
+            if (!box) return;
+            box.textContent = msg;
+            box.className = isError
+                ? 'text-xs font-semibold px-3 py-2 rounded-xl mb-3 border bg-rose-50 text-rose-700 border-rose-200'
+                : 'text-xs font-semibold px-3 py-2 rounded-xl mb-3 border bg-emerald-50 text-emerald-700 border-emerald-200';
+            box.classList.remove('hidden');
+        }
+
+        function hideResetPopupMessage() {
+            const box = document.getElementById('reset-password-popup-msg');
+            if (!box) return;
+            box.textContent = '';
+            box.className = 'hidden text-xs font-semibold px-3 py-2 rounded-xl mb-3 border';
+        }
+
+        function requestPasswordProtectedReset(targetLabel, onAuthorized) {
+            if (activeRole !== 'admin') {
+                showToast('Admin access required to reset crop records.', 'error');
+                return;
+            }
+            pendingResetAction = onAuthorized;
+            document.getElementById('reset-password-target-label').textContent = `Target: ${targetLabel}`;
+            document.getElementById('reset-password-input').value = '';
+            showResetPopupMessage('Password-protected pop-up: Enter password to continue reset.', false);
+            const modal = document.getElementById('reset-password-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => document.getElementById('reset-password-input').focus(), 50);
+            lucide.createIcons();
+        }
+
+        function closeResetPasswordModal() {
+            const modal = document.getElementById('reset-password-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            hideResetPopupMessage();
+            pendingResetAction = null;
+        }
+
+        document.getElementById('reset-password-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const entered = document.getElementById('reset-password-input').value.trim();
+            if (entered !== getAdminPassword()) {
+                showResetPopupMessage('Sayop nga password! Palihug sulayi pag-usab.', true);
+                showToast('Incorrect password. Reset cancelled.', 'error');
+                return;
+            }
+            const action = pendingResetAction;
+            closeResetPasswordModal();
+            closeEditTxModal();
+            if (typeof action === 'function') {
+                action();
+            }
+        });
+
+        function confirmResetCrop(cropId, cropName) {
+            if (activeRole !== 'admin') {
+                showToast('Admin access required to reset crop records.', 'error');
+                return;
+            }
+            requestPasswordProtectedReset(`Records for ${cropName}`, () => {
+                showConfirm(
+                    `Reset ${cropName} records`,
+                    `Password verified. Choose whether to delete Class A only, Class B only, or ALL grades for ${cropName}. Other crops and original settings stay untouched.`,
+                    () => {
+                        const selectedGrade = document.getElementById('reset-grade-select').value;
+                        if (selectedGrade === 'ALL') {
+                            transactions = transactions.filter(t => t.cropId !== cropId);
+                            saveTransactions();
+                            renderAll();
+                            showToast(`Reset all grades for ${cropName}.`, 'success');
+                        } else {
+                            transactions = transactions.filter(t => !(t.cropId === cropId && t.grade === selectedGrade));
+                            saveTransactions();
+                            renderAll();
+                            showToast(`Deleted ${selectedGrade} records for ${cropName}.`, 'success');
+                        }
+                    }
+                );
+                document.getElementById('reset-grade-picker').classList.remove('hidden');
+                document.getElementById('reset-grade-select').value = 'ALL';
+            });
+        }
+
+        function openEditTransactionModal(txId) {
+            if (activeRole !== 'admin') {
+                showToast('Admin access required to edit transactions.', 'error');
+                return;
+            }
+            const tx = transactions.find(t => t.id === txId);
+            if (!tx) return;
+            requestPasswordProtectedReset(`Edit: ${formatKg(tx.qty)} ${tx.cropName} (${tx.type})`, () => {
+                proceedOpenEditTransactionModal(txId);
+            });
+        }
+
+        function proceedOpenEditTransactionModal(txId) {
+            if (activeRole !== 'admin') {
+                showToast('Admin access required to edit transactions.', 'error');
+                return;
+            }
+            const tx = transactions.find(t => t.id === txId);
+            if (!tx) return;
+
+            document.getElementById('edit-tx-id').value = tx.id;
+            document.getElementById('edit-tx-date').value = tx.date || getLocalTodayDateString();
+            document.getElementById('edit-tx-grade').value = tx.grade || 'Class A (Good)';
+            document.getElementById('edit-tx-qty').value = tx.qty || '';
+            document.getElementById('edit-tx-notes').value = tx.notes || '';
+
+            const priceWrap = document.getElementById('edit-tx-price-wrap');
+            const saleFields = document.getElementById('edit-tx-sale-fields');
+            const spoilageFields = document.getElementById('edit-tx-spoilage-fields');
+
+            if (tx.type === 'SPOILAGE') {
+                priceWrap.classList.add('hidden');
+                saleFields.classList.add('hidden');
+                spoilageFields.classList.remove('hidden');
+                document.getElementById('edit-tx-reason').value = tx.reason || 'Overripe / Rot';
+            } else if (tx.type === 'SALE') {
+                priceWrap.classList.remove('hidden');
+                saleFields.classList.remove('hidden');
+                spoilageFields.classList.add('hidden');
+                document.getElementById('edit-tx-price').value = tx.unitPrice != null ? tx.unitPrice : '';
+                document.getElementById('edit-tx-buyer').value = tx.buyer || '';
+                document.getElementById('edit-tx-payment').value = tx.paymentStatus || 'Paid (Cash)';
+            } else {
+                priceWrap.classList.remove('hidden');
+                saleFields.classList.add('hidden');
+                spoilageFields.classList.add('hidden');
+                document.getElementById('edit-tx-price').value = tx.unitPrice != null ? tx.unitPrice : '';
+            }
+
+            const modal = document.getElementById('edit-tx-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeEditTxModal() {
+            const modal = document.getElementById('edit-tx-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        document.getElementById('edit-tx-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (activeRole !== 'admin') {
+                showToast('Admin access required to save edits.', 'error');
+                return;
+            }
+            const txId = document.getElementById('edit-tx-id').value;
+            const tx = transactions.find(t => t.id === txId);
+            if (!tx) return;
+
+            const newQty = parseFloat(document.getElementById('edit-tx-qty').value);
+            if (isNaN(newQty) || newQty <= 0) {
+                showToast('Please enter a valid weight.', 'error');
+                return;
+            }
+
+            tx.date = document.getElementById('edit-tx-date').value;
+            tx.grade = document.getElementById('edit-tx-grade').value;
+            tx.qty = Math.round(newQty * 100) / 100;
+            tx.notes = document.getElementById('edit-tx-notes').value.trim();
+
+            if (tx.type === 'SPOILAGE') {
+                tx.reason = document.getElementById('edit-tx-reason').value;
+            } else {
+                const newPrice = parseFloat(document.getElementById('edit-tx-price').value);
+                tx.unitPrice = !isNaN(newPrice) && newPrice >= 0 ? Math.round(newPrice * 100) / 100 : 0;
+                if (tx.type === 'SALE') {
+                    tx.buyer = document.getElementById('edit-tx-buyer').value.trim();
+                    tx.paymentStatus = document.getElementById('edit-tx-payment').value;
+                }
+            }
+
+            saveTransactions();
+            renderAll();
+            closeEditTxModal();
+            showToast('Transaction entry updated.', 'success');
+        });
+
+        function confirmDeleteTransaction(txId) {
+            if (activeRole !== 'admin') {
+                showToast('Admin access required to delete transactions.', 'error');
+                return;
+            }
+            const tx = transactions.find(t => t.id === txId);
+            if (!tx) return;
+
+            requestPasswordProtectedReset(`Delete: ${formatKg(tx.qty)} ${tx.cropName} (${tx.type})`, () => {
+                showConfirm(
+                    'Delete Transaction Entry?',
+                    `Are you sure you want to delete this ${tx.type.toLowerCase()} record (${formatKg(tx.qty)} ${tx.cropName})? Stock balances will automatically recalculate.`,
+                    () => {
+                        transactions = transactions.filter(t => t.id !== txId);
+                        saveTransactions();
+                        renderAll();
+                        showToast('Transaction deleted and stock recalculated.', 'success');
+                    }
+                );
+            });
+        }
+
+        function toggleBackupMenu() {
+            const menu = document.getElementById('backup-dropdown');
+            const btn = document.getElementById('backup-menu-btn');
+            const isHidden = menu.classList.toggle('hidden');
+            btn.setAttribute('aria-expanded', String(!isHidden));
+        }
+
+        function triggerMobileFriendlyDownload(content, mimeType, filename) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+
+            setTimeout(() => {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }, 1500);
+        }
+
+        function exportCSV() {
+            document.getElementById('backup-dropdown').classList.add('hidden');
+            document.getElementById('backup-menu-btn').setAttribute('aria-expanded', 'false');
+
+            if (transactions.length === 0) {
+                showToast('No transactions available to export.', 'error');
+                return;
+            }
+
+            const headers = ['Date', 'Type', 'Crop', 'Grade', 'Weight_kg', 'Unit_Price_PHP', 'Total_Amount_PHP', 'Buyer_or_Reason', 'Payment_Status', 'Notes'];
+            const rows = transactions.map(tx => {
+                const total = tx.type === 'SPOILAGE' ? 0 : (tx.qty * (tx.unitPrice || 0)).toFixed(2);
+                const buyerOrReason = tx.type === 'SALE' ? (tx.buyer || '') : (tx.reason || '');
+                return [
+                    tx.date,
+                    tx.type,
+                    `"${(tx.cropName || '').replace(/"/g, '""')}"`,
+                    `"${(tx.grade || '').replace(/"/g, '""')}"`,
+                    tx.qty,
+                    tx.unitPrice || 0,
+                    total,
+                    `"${buyerOrReason.replace(/"/g, '""')}"`,
+                    `"${(tx.paymentStatus || '').replace(/"/g, '""')}"`,
+                    `"${(tx.notes || '').replace(/"/g, '""')}"`
+                ].join(',');
+            });
+
+            const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+            const dateStr = getLocalTodayDateString();
+            triggerMobileFriendlyDownload(
+                csvContent,
+                'text/csv;charset=utf-8;',
+                `Tylers_Integrated_Farm_Inventory_${dateStr}.csv`
+            );
+
+            showToast('CSV export started. Check Files or Downloads.', 'success');
+        }
+
+        function exportJSON() {
+            document.getElementById('backup-dropdown').classList.add('hidden');
+            document.getElementById('backup-menu-btn').setAttribute('aria-expanded', 'false');
+
+            const payload = {
+                farm: "Tyler's Integrated Farm",
+                exportedAt: new Date().toISOString(),
+                crops,
+                transactions
+            };
+
+            const dateStr = getLocalTodayDateString();
+            triggerMobileFriendlyDownload(
+                JSON.stringify(payload, null, 2),
+                'application/json;charset=utf-8;',
+                `Tylers_Farm_Backup_${dateStr}.json`
+            );
+
+            showToast('JSON backup export started.', 'success');
+        }
+
+        function importJSON(event) {
+            document.getElementById('backup-dropdown').classList.add('hidden');
+            document.getElementById('backup-menu-btn').setAttribute('aria-expanded', 'false');
+
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!Array.isArray(data.crops) || !Array.isArray(data.transactions)) {
+                        throw new Error('Invalid backup format');
+                    }
+                    crops = data.crops;
+                    transactions = data.transactions;
+                    saveCrops();
+                    saveTransactions();
+                    populateCropDropdowns();
+                    autoFillHarvestPrice();
+                    renderAll();
+                    showToast('Farm backup restored successfully!', 'success');
+                } catch (err) {
+                    showToast('Invalid JSON backup file.', 'error');
+                }
+                event.target.value = '';
+            };
+            reader.onerror = function() {
+                showToast('Unable to read selected file on this device.', 'error');
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        function confirmLoadSample() {
+            document.getElementById('backup-dropdown').classList.add('hidden');
+            document.getElementById('backup-menu-btn').setAttribute('aria-expanded', 'false');
+            showConfirm(
+                'Load Sample Harvest Data?',
+                'This will replace current records with realistic sample harvest, sale, and spoilage entries for Atsal, Pakwan, and Talong.',
+                loadSampleData
+            );
+        }
+
+        function loadSampleData() {
+            const today = new Date();
+            const fmtDate = (daysAgo) => {
+                const d = new Date(today);
+                d.setDate(d.getDate() - daysAgo);
+                const offsetMs = d.getTimezoneOffset() * 60000;
+                return new Date(d.getTime() - offsetMs).toISOString().split('T')[0];
+            };
+
+            crops = [...DEFAULT_CROPS];
+            transactions = [
+                {
+                    id: 'sample-1', type: 'HARVEST', date: fmtDate(3),
+                    cropId: 'crop-atsal', cropName: 'Bell Pepper (Atsal)', grade: 'Class A (Good)',
+                    qty: 65.0, unitPrice: 120.00, notes: 'Greenhouse 1 - First picking', createdAt: Date.now() - 500000
+                },
+                {
+                    id: 'sample-2', type: 'HARVEST', date: fmtDate(3),
+                    cropId: 'crop-atsal', cropName: 'Bell Pepper (Atsal)', grade: 'Class B (Second)',
+                    qty: 18.5, unitPrice: 80.00, notes: 'Smaller fruits from Greenhouse 1', createdAt: Date.now() - 490000
+                },
+                {
+                    id: 'sample-3', type: 'HARVEST', date: fmtDate(2),
+                    cropId: 'crop-pakwan', cropName: 'Watermelon (Pakwan)', grade: 'Class A (Good)',
+                    qty: 240.0, unitPrice: 35.00, notes: 'Open Field Block A (48 pcs avg 5kg)', createdAt: Date.now() - 400000
+                },
+                {
+                    id: 'sample-4', type: 'HARVEST', date: fmtDate(1),
+                    cropId: 'crop-talong', cropName: 'Eggplant (Talong)', grade: 'Class A (Good)',
+                    qty: 85.0, unitPrice: 55.00, notes: 'Plot 3 - Morning harvest', createdAt: Date.now() - 300000
+                },
+                {
+                    id: 'sample-5', type: 'SALE', date: fmtDate(1),
+                    cropId: 'crop-pakwan', cropName: 'Watermelon (Pakwan)', grade: 'Class A (Good)',
+                    qty: 150.0, unitPrice: 42.00, buyer: 'Ormoc Public Market Wholesaler', paymentStatus: 'Paid (Cash)', createdAt: Date.now() - 200000
+                },
+                {
+                    id: 'sample-6', type: 'SALE', date: fmtDate(0),
+                    cropId: 'crop-atsal', cropName: 'Bell Pepper (Atsal)', grade: 'Class A (Good)',
+                    qty: 40.0, unitPrice: 140.00, buyer: 'Baybay City Trading', paymentStatus: 'Paid (GCash / Bank)', createdAt: Date.now() - 100000
+                },
+                {
+                    id: 'sample-7', type: 'SPOILAGE', date: fmtDate(0),
+                    cropId: 'crop-talong', cropName: 'Eggplant (Talong)', grade: 'Class A (Good)',
+                    qty: 4.5, reason: 'Pest / Insect Damage', notes: 'Fruit borer damage sorted out during packing', createdAt: Date.now() - 50000
+                }
+            ];
+
+            saveCrops();
+            saveTransactions();
+            populateCropDropdowns();
+            autoFillHarvestPrice();
+            renderAll();
+            showToast('Sample farm inventory loaded!', 'success');
+        }
+
+        function confirmResetAll() {
+            document.getElementById('backup-dropdown').classList.add('hidden');
+            document.getElementById('backup-menu-btn').setAttribute('aria-expanded', 'false');
+            showConfirm(
+                'Reset All Farm Records?',
+                'This will permanently delete all harvest, sales, and spoilage logs stored on this device. Make sure you have exported a CSV or JSON backup first.',
+                () => {
+                    transactions = [];
+                    crops = [...DEFAULT_CROPS];
+                    saveCrops();
+                    saveTransactions();
+                    populateCropDropdowns();
+                    autoFillHarvestPrice();
+                    renderAll();
+                    showToast('All records have been cleared.', 'success');
+                }
+            );
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            const styles = {
+                success: 'bg-farm-900 text-white border-farm-700',
+                error: 'bg-rose-700 text-white border-rose-600',
+                warning: 'bg-amber-600 text-white border-amber-500'
+            };
+
+            const icons = {
+                success: 'check-circle-2',
+                error: 'x-circle',
+                warning: 'alert-triangle'
+            };
+
+            toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border text-xs font-semibold transform transition-all duration-300 translate-y-2 opacity-0 ${styles[type] || styles.success}`;
+            toast.innerHTML = `
+                <i data-lucide="${icons[type] || 'info'}" class="w-4 h-4 shrink-0"></i>
+                <span class="flex-1">${escapeHTML(message)}</span>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
