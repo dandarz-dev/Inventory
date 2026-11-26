@@ -401,7 +401,6 @@
                     <div>
                         <div class="flex items-center gap-2 flex-wrap">
                             <h1 class="text-lg sm:text-2xl font-extrabold tracking-tight text-white">Tyler's Integrated Farm</h1>
-                            <span class="px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 rounded-full">Android &amp; iOS Ready</span>
                         </div>
                         <p class="text-xs sm:text-sm text-emerald-100/80 mt-0.5">Vegetable Harvest, Stock &amp; Dispatch Inventory System</p>
                     </div>
@@ -412,10 +411,6 @@
                     <button type="button" onclick="openCropModal()" class="admin-only-control min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition cursor-pointer">
                         <i data-lucide="plus-circle" class="w-4 h-4"></i>
                         <span>Add Crop</span>
-                    </button>
-                    <button type="button" onclick="exportCSV()" class="min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/25 text-white border border-white/15 text-xs font-semibold transition cursor-pointer" title="Download Excel-compatible CSV">
-                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
-                        <span>Export CSV</span>
                     </button>
                     <div class="relative inline-block admin-only-control">
                         <button type="button" onclick="toggleBackupMenu()" id="backup-menu-btn" aria-expanded="false" aria-controls="backup-dropdown" class="min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/25 text-white border border-white/15 text-xs font-semibold transition cursor-pointer">
@@ -733,6 +728,15 @@
                     <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-4">Record your first harvest on the left panel or load sample farm data to explore Tyler's Integrated Farm inventory.</p>
                     <button type="button" onclick="loadSampleData()" class="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-farm-100 hover:bg-farm-200 active:bg-farm-300 text-farm-900 text-xs font-bold transition cursor-pointer">
                         <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Load Sample Harvest Data
+                    </button>
+                </div>
+
+                <!-- Bottom Bar of Live Inventory Balances: Export to CSV -->
+                <div class="px-4 sm:px-5 py-3.5 bg-slate-50/80 border-t border-earth-200/80 flex flex-wrap items-center justify-between gap-3 no-print">
+                    <span class="text-xs text-slate-500">Download full transaction records in Excel-compatible CSV format</span>
+                    <button type="button" onclick="exportCSV()" class="min-h-[40px] inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-farm-800 hover:bg-farm-900 active:bg-farm-950 text-white text-xs font-semibold shadow-xs transition cursor-pointer" title="Download Excel-compatible CSV">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                        <span>Export to CSV</span>
                     </button>
                 </div>
             </section>
