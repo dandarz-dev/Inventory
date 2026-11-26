@@ -69,7 +69,7 @@
             padding-top: var(--sat);
             padding-left: var(--sal);
             padding-right: var(--sar);
-            padding-bottom: calc(var(--sab) + 1rem);
+            padding-bottom: var(--sab);
             overscroll-behavior-y: contain;
         }
 
@@ -127,34 +127,7 @@
 <body class="bg-earth-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
 
     <!-- Toast Notification Container (Safe-area aware for iOS/Android) -->
-    <div id="toast-container" style="bottom: calc(1rem + var(--sab)); right: calc(1rem + var(--sar)); left: calc(1rem + var(--sal));" class="fixed z-50 flex flex-col gap-2 sm:left-auto max-w-sm sm:w-full pointer-events-none"></div>
-
-    <!-- Active Role Bar (Admin vs User - Settings Locked) -->
-    <div id="role-bar" class="bg-farm-950/95 text-emerald-100 border-b border-white/10 no-print">
-        <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
-            <div class="flex items-center gap-2.5">
-                <span id="role-pill" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold text-[11px] bg-emerald-500/20 text-emerald-200 border border-emerald-400/30">
-                    <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
-                    <span id="role-label">ADMIN MODE</span>
-                </span>
-                <span id="role-desc" class="text-emerald-100/75 hidden sm:inline">Full access: harvest, sale, spoilage, transaction log, per-crop reset, add crop, delete &amp; backup tools.</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <button type="button" id="btn-switch-user" onclick="switchToUserRole()" class="min-h-[36px] px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/25 text-white font-semibold transition cursor-pointer inline-flex items-center gap-1.5">
-                    <i data-lucide="user" class="w-3.5 h-3.5"></i>
-                    <span>User Mode</span>
-                </button>
-                <button type="button" id="btn-switch-admin" onclick="openAdminModal()" class="min-h-[36px] px-3 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/30 font-semibold transition cursor-pointer inline-flex items-center gap-1.5">
-                    <i data-lucide="key-round" class="w-3.5 h-3.5"></i>
-                    <span>Admin Login</span>
-                </button>
-                <button type="button" id="btn-admin-pw-settings" onclick="openAdminPasswordSettingsModal()" class="admin-only-control min-h-[36px] px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-amber-200 border border-amber-400/30 font-semibold transition cursor-pointer inline-flex items-center gap-1.5">
-                    <i data-lucide="settings" class="w-3.5 h-3.5"></i>
-                    <span>Password Settings</span>
-                </button>
-            </div>
-        </div>
-    </div>
+    <div id="toast-container" style="bottom: calc(4.25rem + var(--sab)); right: calc(1rem + var(--sar)); left: calc(1rem + var(--sal));" class="fixed z-50 flex flex-col gap-2 sm:left-auto max-w-sm sm:w-full pointer-events-none"></div>
 
     <!-- Admin PIN / Password Modal -->
     <div id="admin-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
@@ -809,6 +782,33 @@
         </div>
     </footer>
 
+    <!-- Bottom Role Bar (Admin vs User - Settings Locked) -->
+    <div id="role-bar" class="bg-farm-950 text-white border-t border-emerald-500/30 no-print">
+        <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div class="flex items-center gap-2.5">
+                <span id="role-pill" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold text-[11px] bg-emerald-500/25 text-emerald-100 border border-emerald-300/50">
+                    <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-300"></i>
+                    <span id="role-label">ADMIN MODE</span>
+                </span>
+                <span id="role-desc" class="text-emerald-50 hidden sm:inline">Full access: harvest, sale, spoilage, transaction log, per-crop reset, add crop, delete &amp; backup tools.</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" id="btn-switch-user" onclick="switchToUserRole()" class="min-h-[36px] px-3 py-1 rounded-lg bg-sky-500/25 hover:bg-sky-500/35 active:bg-sky-500/45 text-sky-100 border border-sky-300/40 font-semibold transition cursor-pointer inline-flex items-center gap-1.5">
+                    <i data-lucide="user" class="w-3.5 h-3.5 text-sky-200"></i>
+                    <span>User Mode</span>
+                </button>
+                <button type="button" id="btn-switch-admin" onclick="openAdminModal()" class="min-h-[36px] px-3 py-1 rounded-lg bg-amber-500/25 hover:bg-amber-500/35 text-amber-100 border border-amber-300/50 font-semibold transition cursor-pointer inline-flex items-center gap-1.5">
+                    <i data-lucide="key-round" class="w-3.5 h-3.5 text-amber-200"></i>
+                    <span>Admin Login</span>
+                </button>
+                <button type="button" id="btn-admin-pw-settings" onclick="openAdminPasswordSettingsModal()" class="admin-only-control min-h-[36px] px-3 py-1 rounded-lg bg-amber-400/20 hover:bg-amber-400/30 text-amber-100 border border-amber-300/50 font-semibold transition cursor-pointer inline-flex items-center gap-1.5">
+                    <i data-lucide="settings" class="w-3.5 h-3.5 text-amber-200"></i>
+                    <span>Password Settings</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const ROLE_STORAGE_KEY = 'tylers_farm_active_role_v1';
         const ADMIN_PASSWORD_STORAGE_KEY = 'tylers_farm_admin_password_v1';
@@ -954,14 +954,16 @@
             const btnAdmin = document.getElementById('btn-switch-admin');
 
             if (isAdmin) {
-                pill.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold text-[11px] bg-emerald-500/20 text-emerald-200 border border-emerald-400/30';
+                pill.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold text-[11px] bg-emerald-500/25 text-emerald-100 border border-emerald-300/50';
                 label.textContent = 'ADMIN MODE';
+                desc.className = 'text-emerald-50 hidden sm:inline';
                 desc.textContent = 'Full access: harvest, sale, spoilage, transaction log, per-crop reset, add crop, delete & backup tools.';
                 btnUser.classList.remove('hidden');
                 btnAdmin.classList.add('hidden');
             } else {
-                pill.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold text-[11px] bg-sky-500/20 text-sky-200 border border-sky-400/30';
+                pill.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold text-[11px] bg-sky-500/25 text-sky-100 border border-sky-300/50';
                 label.textContent = 'USER MODE';
+                desc.className = 'text-sky-50 hidden sm:inline';
                 desc.textContent = 'Standard user access: can record stock movements; transaction log & admin actions locked.';
                 btnUser.classList.add('hidden');
                 btnAdmin.classList.remove('hidden');
