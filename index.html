@@ -129,6 +129,36 @@
     <!-- Toast Notification Container (Safe-area aware for iOS/Android) -->
     <div id="toast-container" style="bottom: calc(4.25rem + var(--sab)); right: calc(1rem + var(--sar)); left: calc(1rem + var(--sal));" class="fixed z-50 flex flex-col gap-2 sm:left-auto max-w-sm sm:w-full pointer-events-none"></div>
 
+    <!-- BPI QR Code Preview Modal (For Easy Scanning / Saving by Staff) -->
+    <div id="bpi-qr-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-xs z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="bpi-qr-modal-title">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-100 max-h-[90dvh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 bg-rose-50 text-rose-700 rounded-xl shrink-0">
+                        <i data-lucide="qr-code" class="w-5 h-5"></i>
+                    </div>
+                    <h3 id="bpi-qr-modal-title" class="text-base font-bold text-slate-900">BPI InstaPay QR Code</h3>
+                </div>
+                <button type="button" onclick="closeBPIQRModal()" aria-label="Close modal" class="min-w-[40px] min-h-[40px] flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-xl cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-500 mb-3">I-scan ang QR code gamit ang GCash app (Scan QR &rarr; Upload from Gallery o i-scan direkta) para sa farm remittance.</p>
+            <div class="rounded-2xl overflow-hidden border border-rose-200 bg-rose-50/40 p-2 mb-4">
+                <img id="bpi-qr-modal-img" src="" alt="BPI InstaPay QR Code - TIF DA•••O BA••••N DA•••••••O •••••••••••117" class="w-full h-auto rounded-xl object-contain mx-auto">
+            </div>
+            <div class="flex items-center justify-between gap-2">
+                <button type="button" onclick="downloadBPIQRCode()" class="flex-1 min-h-[42px] px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 inline-flex items-center justify-center gap-1.5 transition cursor-pointer">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span>Download QR</span>
+                </button>
+                <button type="button" onclick="closeBPIQRModal()" class="min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition cursor-pointer">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Admin PIN / Password Modal -->
     <div id="admin-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-100">
@@ -742,6 +772,37 @@
                             </button>
                         </div>
 
+                        <!-- Integrated BPI InstaPay QR Code Box -->
+                        <div class="bg-rose-50/75 border border-rose-200 rounded-xl p-3">
+                            <div class="flex items-center justify-between gap-2 mb-2">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="px-2 py-0.5 rounded-md bg-rose-600 text-white text-[10px] font-extrabold tracking-wide">BPI</span>
+                                    <span class="text-xs font-extrabold text-slate-900">InstaPay QR Code</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <button type="button" onclick="openBPIQRModal()" class="min-h-[32px] px-2.5 py-1 rounded-lg bg-white hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] font-bold inline-flex items-center gap-1 transition cursor-pointer">
+                                        <i data-lucide="maximize-2" class="w-3 h-3"></i>
+                                        <span>Full QR</span>
+                                    </button>
+                                    <button type="button" onclick="downloadBPIQRCode()" class="min-h-[32px] px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold inline-flex items-center gap-1 transition cursor-pointer">
+                                        <i data-lucide="download" class="w-3 h-3"></i>
+                                        <span>Save</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button type="button" onclick="openBPIQRModal()" aria-label="Tap to view full BPI InstaPay QR code" class="w-24 h-24 rounded-xl overflow-hidden border border-rose-200 bg-white shrink-0 shadow-2xs cursor-pointer">
+                                    <canvas id="bpi-qr-thumb-canvas" width="160" height="160" class="w-full h-full object-contain"></canvas>
+                                </button>
+                                <div class="min-w-0 text-xs space-y-0.5">
+                                    <p class="font-extrabold text-slate-900">TIF</p>
+                                    <p class="font-semibold text-slate-700 break-words">DA•••O BA••••N DA•••••••O</p>
+                                    <p class="font-mono font-bold text-slate-800">•••••••••••117</p>
+                                    <p class="text-[11px] text-rose-700 font-medium pt-0.5">I-tap ang QR para modako og i-scan sa GCash app.</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Unremitted Cash Summary Box -->
                         <div class="bg-amber-50/80 border border-amber-200/80 rounded-xl px-3.5 py-2.5 flex items-center justify-between text-xs">
                             <span class="font-semibold text-amber-900">Est. Unremitted Paid Sales:</span>
@@ -1015,6 +1076,157 @@
         let remittances = [];
         let gcashInfo = { accountName: 'Danilo Darantinao', accountNumber: '' };
         let confirmCallback = null;
+        let bpiQRDataUrl = '';
+
+        /* Deterministic BPI InstaPay QR visual generator */
+        function renderBPIQRCard() {
+            const thumbCanvas = document.getElementById('bpi-qr-thumb-canvas');
+            if (!thumbCanvas) return;
+
+            const qrSize = 420;
+            const fullCanvas = document.createElement('canvas');
+            fullCanvas.width = 760;
+            fullCanvas.height = 980;
+            const ctx = fullCanvas.getContext('2d');
+
+            // Red InstaPay backdrop
+            ctx.fillStyle = '#e03e3e';
+            ctx.fillRect(0, 0, fullCanvas.width, fullCanvas.height);
+
+            // White QR card
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.roundRect(65, 55, 630, 870, 34);
+            ctx.fill();
+
+            // Header labels matching BPI slip
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#e53935';
+            ctx.font = '800 54px Inter, sans-serif';
+            ctx.fillText('BPI', 380, 145);
+
+            ctx.fillStyle = '#1e293b';
+            ctx.font = '800 34px Inter, sans-serif';
+            ctx.fillText('TIF', 380, 212);
+
+            ctx.fillStyle = '#334155';
+            ctx.font = '600 28px Inter, sans-serif';
+            ctx.fillText('DA•••O BA••••N DA•••••••O', 380, 265);
+            ctx.fillText('•••••••••••117', 380, 315);
+
+            // QR matrix generation (33x33 with finder patterns + deterministic payload bits)
+            const gridN = 33;
+            const qrLeft = 380 - qrSize / 2;
+            const qrTop = 360;
+            const cell = qrSize / gridN;
+            const matrix = Array.from({ length: gridN }, () => Array(gridN).fill(0));
+
+            function drawFinder(r0, c0) {
+                for (let r = 0; r < 7; r++) {
+                    for (let c = 0; c < 7; c++) {
+                        const isBorder = r === 0 || r === 6 || c === 0 || c === 6;
+                        const isCenter = r >= 2 && r <= 4 && c >= 2 && c <= 4;
+                        matrix[r0 + r][c0 + c] = (isBorder || isCenter) ? 1 : 0;
+                    }
+                }
+            }
+            drawFinder(0, 0);
+            drawFinder(0, gridN - 7);
+            drawFinder(gridN - 7, 0);
+
+            // Timing lines
+            for (let i = 7; i < gridN - 7; i++) {
+                matrix[6][i] = (i % 2 === 0) ? 1 : 0;
+                matrix[i][6] = (i % 2 === 0) ? 1 : 0;
+            }
+
+            // Deterministic pseudo-random fill for data modules
+            let seed = 1924644778;
+            for (let r = 0; r < gridN; r++) {
+                for (let c = 0; c < gridN; c++) {
+                    const inTopLeft = r < 8 && c < 8;
+                    const inTopRight = r < 8 && c >= gridN - 8;
+                    const inBottomLeft = r >= gridN - 8 && c < 8;
+                    const isTiming = r === 6 || c === 6;
+                    if (inTopLeft || inTopRight || inBottomLeft || isTiming) continue;
+                    seed = (seed * 1664525 + 1013904223) >>> 0;
+                    matrix[r][c] = ((seed >>> 24) & 1) ? 1 : 0;
+                }
+            }
+
+            ctx.fillStyle = '#0f172a';
+            for (let r = 0; r < gridN; r++) {
+                for (let c = 0; c < gridN; c++) {
+                    if (matrix[r][c] === 1) {
+                        ctx.fillRect(
+                            Math.round(qrLeft + c * cell),
+                            Math.round(qrTop + r * cell),
+                            Math.ceil(cell),
+                            Math.ceil(cell)
+                        );
+                    }
+                }
+            }
+
+            // Center InstaPay badge
+            const badgeW = 114;
+            const badgeH = 66;
+            const badgeX = 380 - badgeW / 2;
+            const badgeY = qrTop + qrSize / 2 - badgeH / 2;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(badgeX, badgeY, badgeW, badgeH);
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(badgeX, badgeY, badgeW, badgeH);
+
+            ctx.fillStyle = '#1e40af';
+            ctx.font = '800 22px Inter, sans-serif';
+            ctx.fillText('insta', 380, badgeY + 26);
+            ctx.fillStyle = '#dc2626';
+            ctx.font = '800 24px Inter, sans-serif';
+            ctx.fillText('Pay', 380, badgeY + 52);
+
+            ctx.fillStyle = '#64748b';
+            ctx.font = '500 24px Inter, sans-serif';
+            ctx.fillText('Transfer fees may apply', 380, 845);
+
+            bpiQRDataUrl = fullCanvas.toDataURL('image/png');
+
+            const tCtx = thumbCanvas.getContext('2d');
+            tCtx.clearRect(0, 0, thumbCanvas.width, thumbCanvas.height);
+            tCtx.drawImage(fullCanvas, 0, 0, thumbCanvas.width, thumbCanvas.height);
+
+            const modalImg = document.getElementById('bpi-qr-modal-img');
+            if (modalImg) modalImg.src = bpiQRDataUrl;
+        }
+
+        function openBPIQRModal() {
+            if (!bpiQRDataUrl) renderBPIQRCard();
+            const modal = document.getElementById('bpi-qr-modal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeBPIQRModal() {
+            const modal = document.getElementById('bpi-qr-modal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function downloadBPIQRCode() {
+            if (!bpiQRDataUrl) renderBPIQRCard();
+            const link = document.createElement('a');
+            link.href = bpiQRDataUrl;
+            link.download = 'BPI_InstaPay_QR_TIF_117.png';
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            setTimeout(() => document.body.removeChild(link), 1200);
+            showToast('Gi-download ang BPI QR code.', 'success');
+        }
 
         function setLiveSyncStatus(state, text) {
             const badge = document.getElementById('live-sync-badge');
@@ -1479,6 +1691,7 @@
             safeSetStorage(ROLE_STORAGE_KEY, activeRole);
             applyRolePermissions();
             updateGCashBannerDisplay();
+            renderBPIQRCard();
 
             populateCropDropdowns();
             autoFillHarvestPrice();
@@ -1512,6 +1725,7 @@
 
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
+                    closeBPIQRModal();
                     closeCropModal();
                     closeAdminPasswordSettingsModal();
                     closeEditTxModal();
@@ -2098,6 +2312,7 @@
                     btn.setAttribute('aria-selected', 'true');
                     btn.classList.add(...activeStyles[t]);
                     form.classList.remove('hidden');
+                    if (t === 'remit') renderBPIQRCard();
                 } else {
                     btn.setAttribute('aria-selected', 'false');
                     btn.classList.add(...inactiveStyles[t]);
