@@ -738,8 +738,8 @@
                             <div>
                                 <label for="spoilage-reason" class="block text-xs font-semibold text-slate-600 mb-1">Cause / Reason</label>
                                 <select id="spoilage-reason" required class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-rose-600 focus:ring-2 focus:ring-rose-600/20 outline-none bg-white">
-                                    <option value="Overripe / Rot">Overripe / Rot</option>
-                                    <option value="Pest / Insect Damage">Pest / Insect Damage</option>
+                                    <option value="Overripe / Rot">Less / Discount</option>
+                                    <option value="Pest / Insect Damage">Spoiled / Damage</option>
                                     <option value="Transport / Crate Bruising">Transport / Crate Bruising</option>
                                     <option value="Moisture / Weight Shrinkage">Moisture / Weight Shrinkage</option>
                                     <option value="Weather / Sunscald">Weather / Sunscald</option>
@@ -961,7 +961,7 @@
                         <select id="filter-type" onchange="syncFilterTypeStyle(); renderAll();" aria-label="Filter by transaction type" class="min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold text-slate-700 focus:border-farm-600 outline-none transition">
                             <option value="ALL" class="bg-white text-slate-800 font-semibold">All Types</option>
                             <option value="HARVEST" class="bg-emerald-100 text-emerald-900 font-bold">🟢 HARVEST (In)</option>
-                            <option value="SALE" class="bg-blue-100 text-blue-900 font-bold">🔵 SALE (Out)</option>
+                            <option value="SALE" class="bg-blue-100 text-blue-900 font-bold">🔵 SALES (Out)</option>
                             <option value="SPOILAGE" class="bg-rose-100 text-rose-900 font-bold">🔴 SPOILAGE (Loss)</option>
                         </select>
 
