@@ -127,7 +127,7 @@
 <body class="bg-earth-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
 
     <!-- Toast Notification Container (Safe-area aware for iOS/Android) -->
-    <div id="toast-container" style="bottom: calc(4.25rem + var(--sab)); right: calc(1rem + var(--sar)); left: calc(1rem + var(--sal));" class="fixed z-50 flex flex-col gap-2 sm:left-auto max-w-sm sm:w-full pointer-events-none"></div>
+    <div id="toast-container" style="bottom: calc(5.25rem + var(--sab)); right: calc(1rem + var(--sar)); left: calc(1rem + var(--sal));" class="fixed z-50 flex flex-col gap-2 sm:left-auto max-w-sm sm:w-full pointer-events-none"></div>
 
     <!-- BPI QR Code Preview Modal (Exact Original High-Res BPI QR) -->
     <div id="bpi-qr-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-xs z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="bpi-qr-modal-title">
@@ -866,6 +866,7 @@
                                 <th class="py-3.5 px-3 text-right">Sold</th>
                                 <th class="py-3.5 px-3 text-right">Spoiled</th>
                                 <th class="py-3.5 px-3 text-right">On Hand</th>
+                                <th class="py-3.5 px-3 text-right">Net Sales</th>
                                 <th class="py-3.5 px-3 text-right">Est. Value</th>
                                 <th class="py-3.5 px-3 text-center">Status</th>
                                 <th class="py-3.5 px-4 text-center admin-only-control no-print">Reset Crop</th>
@@ -1676,6 +1677,9 @@
                         harvestedKg: 0,
                         soldKg: 0,
                         spoiledKg: 0,
+                        grossSales: 0,
+                        spoilageLoss: 0,
+                        netSales: 0,
                         availableKg: 0,
                         latestFarmgatePrice: defaultPrice,
                         lowStockThreshold: threshold
@@ -1694,6 +1698,7 @@
                     const saleAmt = qty * (Number(tx.unitPrice) || 0);
                     entry.soldKg += qty;
                     entry.availableKg -= qty;
+                    entry.grossSales += saleAmt;
                     totalSoldKg += qty;
                     totalSoldRevenue += saleAmt;
                     if (!tx.paymentStatus || !tx.paymentStatus.includes('Credit')) {
@@ -1702,12 +1707,17 @@
                 } else if (tx.type === 'SPOILAGE') {
                     entry.spoiledKg += qty;
                     entry.availableKg -= qty;
+                    const lossRate = Number(tx.unitPrice) > 0
+                        ? Number(tx.unitPrice)
+                        : (entry.latestFarmgatePrice || defaultPrice || 0);
+                    entry.spoilageLoss += qty * lossRate;
                     totalSpoiledKg += qty;
                 }
             });
 
             let totalAvailableKg = 0;
             let totalEstimatedValue = 0;
+            let totalNetSales = 0;
             let activeBatchCount = 0;
 
             const stockList = Array.from(stockMap.values()).map(item => {
@@ -1715,10 +1725,14 @@
                 item.harvestedKg = Math.round(item.harvestedKg * 100) / 100;
                 item.soldKg = Math.round(item.soldKg * 100) / 100;
                 item.spoiledKg = Math.round(item.spoiledKg * 100) / 100;
+                item.grossSales = Math.round(item.grossSales * 100) / 100;
+                item.spoilageLoss = Math.round(item.spoilageLoss * 100) / 100;
+                item.netSales = Math.round((item.grossSales - item.spoilageLoss) * 100) / 100;
                 item.estimatedValue = item.availableKg * item.latestFarmgatePrice;
 
                 totalAvailableKg += item.availableKg;
                 totalEstimatedValue += item.estimatedValue;
+                totalNetSales += item.netSales;
                 if (item.availableKg > 0) activeBatchCount++;
                 return item;
             });
@@ -1751,6 +1765,7 @@
                 totalSoldRevenue,
                 totalPaidSalesRevenue,
                 totalSpoiledKg,
+                totalNetSales,
                 activeBatchCount,
                 totalRemitted,
                 verifiedRemitted,
@@ -1980,6 +1995,27 @@
             }
 
             emptyState.classList.add('hidden');
+
+            // Group by cropName to compute combined crop-level Net Sales across grades (e.g., Class A + Class B)
+            const cropTotalsMap = new Map();
+            stockList.forEach(item => {
+                const cKey = item.cropName;
+                if (!cropTotalsMap.has(cKey)) {
+                    cropTotalsMap.set(cKey, {
+                        cropName: cKey,
+                        grossSales: 0,
+                        spoilageLoss: 0,
+                        netSales: 0,
+                        rowCount: 0
+                    });
+                }
+                const ct = cropTotalsMap.get(cKey);
+                ct.grossSales += item.grossSales || 0;
+                ct.spoilageLoss += item.spoilageLoss || 0;
+                ct.netSales += item.netSales || 0;
+                ct.rowCount += 1;
+            });
+
             tbody.innerHTML = stockList.map(item => {
                 let statusBadge = '';
                 if (item.availableKg <= 0) {
@@ -1996,6 +2032,15 @@
                         ? 'text-amber-700 bg-amber-50 border-amber-200'
                         : 'text-slate-600 bg-slate-100 border-slate-200';
 
+                const cropTotal = cropTotalsMap.get(item.cropName);
+                const netSalesColor = item.netSales < 0 ? 'text-rose-600' : 'text-indigo-700';
+                const spoilageNote = item.spoilageLoss > 0
+                    ? `<div class="text-[10px] font-normal text-rose-500">-${formatPHP(item.spoilageLoss)} spoiled</div>`
+                    : `<div class="text-[10px] font-normal text-slate-400">Gross: ${formatPHP(item.grossSales)}</div>`;
+                const cropCombinedNote = cropTotal && cropTotal.rowCount > 1
+                    ? `<div class="text-[10px] font-semibold ${cropTotal.netSales < 0 ? 'text-rose-600' : 'text-slate-500'}">Crop Net: ${formatPHP(cropTotal.netSales)}</div>`
+                    : '';
+
                 return `
                     <tr class="hover:bg-slate-50/80 transition">
                         <td class="py-3.5 px-4">
@@ -2006,6 +2051,11 @@
                         <td class="py-3.5 px-3 text-right text-blue-700 font-medium whitespace-nowrap">${formatKg(item.soldKg)}</td>
                         <td class="py-3.5 px-3 text-right text-rose-600 font-medium whitespace-nowrap">${formatKg(item.spoiledKg)}</td>
                         <td class="py-3.5 px-3 text-right font-extrabold text-slate-900 whitespace-nowrap">${formatKg(item.availableKg)}</td>
+                        <td class="py-3.5 px-3 text-right font-extrabold ${netSalesColor} whitespace-nowrap">
+                            ${formatPHP(item.netSales)}
+                            ${spoilageNote}
+                            ${cropCombinedNote}
+                        </td>
                         <td class="py-3.5 px-3 text-right font-bold text-emerald-700 whitespace-nowrap">
                             ${formatPHP(item.estimatedValue)}
                             <div class="text-[10px] font-normal text-slate-400">@ ${formatPHP(item.latestFarmgatePrice)}/kg</div>
@@ -2877,5 +2927,233 @@
 
         window.addEventListener('DOMContentLoaded', initApp);
     </script>
+
+    <!-- Floating Standard Calculator Button & Widget -->
+    <div id="floating-calc-wrapper" class="fixed z-40 no-print" style="bottom: calc(1rem + var(--sab)); right: calc(1rem + var(--sar));">
+        <!-- Floating Toggle Button -->
+        <button type="button" id="floating-calc-toggle" onclick="toggleFloatingCalc()" aria-label="Open Calculator" title="Standard Calculator" class="w-14 h-14 rounded-full bg-farm-800 hover:bg-farm-900 active:bg-farm-950 text-white shadow-xl border-2 border-emerald-300/40 flex items-center justify-center transition-transform hover:scale-105 cursor-pointer">
+            <i data-lucide="calculator" class="w-6 h-6 text-emerald-200"></i>
+        </button>
+
+        <!-- Calculator Panel -->
+        <div id="floating-calc-panel" class="hidden absolute bottom-16 right-0 w-72 sm:w-80 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-farm-950 to-farm-800 text-white px-4 py-2.5 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="calculator" class="w-4 h-4 text-emerald-300"></i>
+                    <span class="text-xs font-bold tracking-wide">Farm Calculator</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button type="button" onclick="copyCalcResult()" title="Copy Result" class="p-1.5 rounded-lg hover:bg-white/15 text-emerald-100 transition cursor-pointer">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button type="button" onclick="toggleFloatingCalc()" aria-label="Close Calculator" class="p-1.5 rounded-lg hover:bg-white/15 text-white transition cursor-pointer">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Display Screen -->
+            <div class="bg-slate-900 px-4 py-3 text-right">
+                <div id="calc-expression" class="text-[11px] text-slate-400 h-4 truncate font-mono"></div>
+                <div id="calc-display" class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight truncate font-mono mt-0.5">0</div>
+            </div>
+
+            <!-- Keypad Grid -->
+            <div class="p-3 bg-slate-50 grid grid-cols-4 gap-2">
+                <!-- Row 1 -->
+                <button type="button" onclick="calcClear()" class="min-h-[44px] rounded-xl bg-rose-100 hover:bg-rose-200 active:bg-rose-300 text-rose-700 font-bold text-sm transition cursor-pointer">AC</button>
+                <button type="button" onclick="calcBackspace()" aria-label="Backspace" class="min-h-[44px] rounded-xl bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-700 font-bold text-sm flex items-center justify-center transition cursor-pointer">
+                    <i data-lucide="delete" class="w-4 h-4"></i>
+                </button>
+                <button type="button" onclick="calcPercent()" class="min-h-[44px] rounded-xl bg-amber-100 hover:bg-amber-200 active:bg-amber-300 text-amber-800 font-extrabold text-sm transition cursor-pointer">%</button>
+                <button type="button" onclick="calcOperator('/')" class="min-h-[44px] rounded-xl bg-farm-100 hover:bg-farm-200 active:bg-farm-300 text-farm-900 font-extrabold text-base transition cursor-pointer">&divide;</button>
+
+                <!-- Row 2 -->
+                <button type="button" onclick="calcDigit('7')" class="min-h-[44px] rounded-xl bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-800 font-bold text-base border border-slate-200/80 shadow-2xs transition cursor-pointer">7</button>
+                <button type="button" onclick="calcDigit('8')" class="min-h-[44px] rounded-xl bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-800 font-bold text-base border border-slate-200/80 shadow-2xs transition cursor-pointer">8</button>
+                <button type="button" onclick="calcDigit('9')" class="min-h-[44px] rounded-xl bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-800 font-bold text-base border border-slate-200/80 shadow-2xs transition cursor-pointer">9</button>
+                <button type="button" onclick="calcOperator('*')" class="min-h-[44px] rounded-xl bg-farm-100 hover:bg-farm-200 active:bg-farm-300 text-farm-900 font-extrabold text-base transition cursor-pointer">&times;</button>
+
+                <!-- Row 3 -->
+                <button type="button" onclick="calcDigit('4')" class="min-h-[44px] rounded-xl bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-800 font-bold text-base border border-slate-200/80 shadow-2xs transition cursor-pointer">4</button>
+                <button type="button" onclick="calcDigit('5')" class="min-h-[44px] rounded-xl bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-800 font-bold text-base border border-slate-200/80 shadow-2xs transition cursor-pointer">5</button>
+                <button type="button" onclick="calcDigit('6')" class="min-h-[44px] rounded-xl bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-800 font-bold text-base border border-slate-200/80 shadow-2xs transition cursor-pointer">6</button>
+                <button type="button" onclick="calcOperator('-')" class="min-h-[44px] rounded-xl bg-farm-100 hover:bg-farm-200 active:bg-farm-300 text-farm-900 font-extrabold text-base transition cursor-pointer">&minus;</button>
+
+                <!-- Row 4 -->
+                <button type="button" onclick="calcDigit('1')" class="min-h-[44px] rounded-xl bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-800 font-bold text-base border border-slate-200/80 shadow-2xs transition cursor-pointer">1</button>
+                <button type="button" onclick="calcDigit('2')" class="min-h-[44px] rounded-xl bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-800 font-bold text-base border border-slate-200/80 shadow-2xs transition cursor-pointer">2</button>
+                <button type="button" onclick="calcDigit('3')" class="min-h-[44px] rounded-xl bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-800 font-bold text-base border border-slate-200/80 shadow-2xs transition cursor-pointer">3</button>
+                <button type="button" onclick="calcOperator('+')" class="min-h-[44px] rounded-xl bg-farm-100 hover:bg-farm-200 active:bg-farm-300 text-farm-900 font-extrabold text-base transition cursor-pointer">+</button>
+
+                <!-- Row 5 -->
+                <button type="button" onclick="calcToggleSign()" class="min-h-[44px] rounded-xl bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-700 font-bold text-sm border border-slate-200/80 shadow-2xs transition cursor-pointer">&plus;/&minus;</button>
+                <button type="button" onclick="calcDigit('0')" class="min-h-[44px] rounded-xl bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-800 font-bold text-base border border-slate-200/80 shadow-2xs transition cursor-pointer">0</button>
+                <button type="button" onclick="calcDecimal()" class="min-h-[44px] rounded-xl bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-800 font-bold text-base border border-slate-200/80 shadow-2xs transition cursor-pointer">.</button>
+                <button type="button" onclick="calcEquals()" class="min-h-[44px] rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-extrabold text-base shadow-sm transition cursor-pointer">=</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Floating Standard Calculator Logic (with %)
+        const calcState = {
+            current: '0',
+            previous: null,
+            operator: null,
+            resetNext: false
+        };
+
+        function toggleFloatingCalc() {
+            const panel = document.getElementById('floating-calc-panel');
+            panel.classList.toggle('hidden');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function updateCalcScreen() {
+            const displayEl = document.getElementById('calc-display');
+            const exprEl = document.getElementById('calc-expression');
+            displayEl.textContent = calcState.current;
+
+            const opSymbols = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+            if (calcState.previous !== null && calcState.operator) {
+                exprEl.textContent = `${calcState.previous} ${opSymbols[calcState.operator]}`;
+            } else {
+                exprEl.textContent = '';
+            }
+        }
+
+        function calcDigit(digit) {
+            if (calcState.resetNext || calcState.current === 'Error') {
+                calcState.current = digit;
+                calcState.resetNext = false;
+            } else {
+                calcState.current = calcState.current === '0' ? digit : calcState.current + digit;
+            }
+            updateCalcScreen();
+        }
+
+        function calcDecimal() {
+            if (calcState.resetNext || calcState.current === 'Error') {
+                calcState.current = '0.';
+                calcState.resetNext = false;
+                updateCalcScreen();
+                return;
+            }
+            if (!calcState.current.includes('.')) {
+                calcState.current += '.';
+                updateCalcScreen();
+            }
+        }
+
+        function calcToggleSign() {
+            if (calcState.current === '0' || calcState.current === 'Error') return;
+            calcState.current = calcState.current.startsWith('-')
+                ? calcState.current.slice(1)
+                : '-' + calcState.current;
+            updateCalcScreen();
+        }
+
+        function calcClear() {
+            calcState.current = '0';
+            calcState.previous = null;
+            calcState.operator = null;
+            calcState.resetNext = false;
+            updateCalcScreen();
+        }
+
+        function calcBackspace() {
+            if (calcState.resetNext || calcState.current === 'Error') {
+                calcClear();
+                return;
+            }
+            calcState.current = calcState.current.length > 1
+                ? calcState.current.slice(0, -1)
+                : '0';
+            if (calcState.current === '-') calcState.current = '0';
+            updateCalcScreen();
+        }
+
+        // Standard % behavior (e.g., 200 - 10% = 180, or 50% = 0.5)
+        function calcPercent() {
+            const currVal = parseFloat(calcState.current);
+            if (isNaN(currVal)) return;
+
+            if (calcState.previous !== null && (calcState.operator === '+' || calcState.operator === '-')) {
+                const baseVal = parseFloat(calcState.previous);
+                const pctValue = (baseVal * currVal) / 100;
+                calcState.current = String(parseFloat(pctValue.toFixed(8)));
+            } else {
+                const pctValue = currVal / 100;
+                calcState.current = String(parseFloat(pctValue.toFixed(8)));
+            }
+            calcState.resetNext = true;
+            updateCalcScreen();
+        }
+
+        function computeResult(a, b, op) {
+            switch (op) {
+                case '+': return a + b;
+                case '-': return a - b;
+                case '*': return a * b;
+                case '/': return b === 0 ? 'Error' : a / b;
+                default: return b;
+            }
+        }
+
+        function calcOperator(nextOp) {
+            const inputVal = parseFloat(calcState.current);
+            if (isNaN(inputVal)) return;
+
+            if (calcState.previous === null) {
+                calcState.previous = inputVal;
+            } else if (calcState.operator && !calcState.resetNext) {
+                const res = computeResult(calcState.previous, inputVal, calcState.operator);
+                if (res === 'Error') {
+                    calcState.current = 'Error';
+                    calcState.previous = null;
+                    calcState.operator = null;
+                    calcState.resetNext = true;
+                    updateCalcScreen();
+                    return;
+                }
+                const cleanRes = parseFloat(res.toFixed(8));
+                calcState.current = String(cleanRes);
+                calcState.previous = cleanRes;
+            }
+
+            calcState.operator = nextOp;
+            calcState.resetNext = true;
+            updateCalcScreen();
+        }
+
+        function calcEquals() {
+            if (calcState.operator === null || calcState.previous === null) return;
+            const inputVal = parseFloat(calcState.current);
+            const res = computeResult(calcState.previous, inputVal, calcState.operator);
+
+            if (res === 'Error') {
+                calcState.current = 'Error';
+            } else {
+                calcState.current = String(parseFloat(res.toFixed(8)));
+            }
+            calcState.previous = null;
+            calcState.operator = null;
+            calcState.resetNext = true;
+            updateCalcScreen();
+        }
+
+        function copyCalcResult() {
+            if (navigator.clipboard && calcState.current !== 'Error') {
+                navigator.clipboard.writeText(calcState.current).then(() => {
+                    if (typeof showToast === 'function') {
+                        showToast(`Copied: ${calcState.current}`, 'success');
+                    }
+                });
+            }
+        }
+    </script>
 </body>
+
 </html>
