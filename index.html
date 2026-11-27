@@ -129,36 +129,6 @@
     <!-- Toast Notification Container (Safe-area aware for iOS/Android) -->
     <div id="toast-container" style="bottom: calc(4.25rem + var(--sab)); right: calc(1rem + var(--sar)); left: calc(1rem + var(--sal));" class="fixed z-50 flex flex-col gap-2 sm:left-auto max-w-sm sm:w-full pointer-events-none"></div>
 
-    <!-- BPI QR Code Preview Modal (For Easy Scanning / Saving by Staff) -->
-    <div id="bpi-qr-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-xs z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="bpi-qr-modal-title">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-100 max-h-[90dvh] overflow-y-auto">
-            <div class="flex items-center justify-between mb-3">
-                <div class="flex items-center gap-2">
-                    <div class="p-2 bg-rose-50 text-rose-700 rounded-xl shrink-0">
-                        <i data-lucide="qr-code" class="w-5 h-5"></i>
-                    </div>
-                    <h3 id="bpi-qr-modal-title" class="text-base font-bold text-slate-900">BPI InstaPay QR Code</h3>
-                </div>
-                <button type="button" onclick="closeBPIQRModal()" aria-label="Close modal" class="min-w-[40px] min-h-[40px] flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-xl cursor-pointer">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            <p class="text-xs text-slate-500 mb-3">Scan QR code using GCash app (Scan QR &rarr; Upload from Gallery or Direct Scan) for farm remittance.</p>
-            <div class="rounded-2xl overflow-hidden border border-rose-200 bg-rose-50/40 p-2 mb-4">
-                <img id="bpi-qr-modal-img" src="" alt="BPI InstaPay QR Code - TIF DA•••O BA••••N DA•••••••O •••••••••••117" class="w-full h-auto rounded-xl object-contain mx-auto">
-            </div>
-            <div class="flex items-center justify-between gap-2">
-                <button type="button" onclick="downloadBPIQRCode()" class="flex-1 min-h-[42px] px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 inline-flex items-center justify-center gap-1.5 transition cursor-pointer">
-                    <i data-lucide="download" class="w-4 h-4"></i>
-                    <span>Download QR</span>
-                </button>
-                <button type="button" onclick="closeBPIQRModal()" class="min-h-[42px] px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition cursor-pointer">
-                    Close
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Admin PIN / Password Modal -->
     <div id="admin-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-100">
@@ -378,7 +348,7 @@
                         <label for="edit-tx-payment" class="block text-xs font-semibold text-slate-600 mb-1">Payment Status</label>
                         <select id="edit-tx-payment" class="w-full min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-200 focus:border-farm-600 outline-none bg-white">
                             <option value="Paid (Cash)">Paid (Cash)</option>
-                            <option value="Paid (GCash / Bank)">Paid (GCash / Bank)</option>
+                            <option value="Paid (PayMongo / QR Ph)">Paid (PayMongo / QR Ph)</option>
                             <option value="Credit / Utang">Credit / Utang (Collectible)</option>
                         </select>
                     </div>
@@ -458,7 +428,7 @@
                                 <span id="live-sync-text">Live Sync: Connecting...</span>
                             </span>
                         </div>
-                        <p class="text-xs sm:text-sm text-emerald-100/80 mt-0.5">Vegetable Harvest, Stock, Dispatch &amp; GCash Remittance</p>
+                        <p class="text-xs sm:text-sm text-emerald-100/80 mt-0.5">Vegetable Harvest, Stock, Dispatch &amp; PayMongo Remittance</p>
                     </div>
                 </div>
 
@@ -506,7 +476,7 @@
     <!-- Main Content Container -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6">
 
-        <!-- KPI Summary Cards (5 Cards: Stock, Value, Sales, Spoilage, GCash Remitted) -->
+        <!-- KPI Summary Cards (5 Cards: Stock, Value, Sales, Spoilage, PayMongo Remitted) -->
         <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
             <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-earth-200/80 print-shadow-none flex items-start justify-between gap-2">
                 <div class="min-w-0">
@@ -543,7 +513,7 @@
 
             <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-earth-200/80 print-shadow-none flex items-start justify-between gap-2">
                 <div class="min-w-0">
-                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 truncate">GCash Remitted</p>
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 truncate">PayMongo Remitted</p>
                     <h2 id="kpi-remitted-total" class="text-xl sm:text-2xl font-extrabold text-sky-700 mt-1">₱0.00</h2>
                     <p id="kpi-unremitted-balance" class="text-[11px] sm:text-xs font-semibold text-amber-700 mt-1 truncate">Unremitted: ₱0.00</p>
                 </div>
@@ -574,7 +544,7 @@
                         <i data-lucide="clipboard-edit" class="w-5 h-5 text-farm-800"></i>
                         Record Stock &amp; Remittance
                     </h3>
-                    <p class="text-xs text-slate-500 mt-0.5">Log harvest, sale, spoilage, or GCash remittance sent</p>
+                    <p class="text-xs text-slate-500 mt-0.5">Log harvest, sale, spoilage, or PayMongo remittance sent</p>
                 </div>
 
                 <!-- 4 Action Mode Tabs -->
@@ -593,7 +563,7 @@
                     </button>
                     <button type="button" role="tab" aria-selected="false" onclick="switchMode('remit')" id="tab-remit" class="mode-tab min-h-[42px] flex flex-col sm:flex-row items-center justify-center gap-1 py-2 px-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer bg-sky-50 text-sky-700 border border-sky-200/80 hover:bg-sky-100">
                         <i data-lucide="smartphone" class="w-3.5 h-3.5 shrink-0"></i>
-                        <span>GCash</span>
+                        <span>PayMongo</span>
                     </button>
                 </div>
 
@@ -695,7 +665,7 @@
                                 <label for="sale-payment" class="block text-xs font-semibold text-slate-600 mb-1">Payment Status</label>
                                 <select id="sale-payment" required class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none bg-white">
                                     <option value="Paid (Cash)">Paid (Cash)</option>
-                                    <option value="Paid (GCash / Bank)">Paid (GCash / Bank)</option>
+                                    <option value="Paid (PayMongo / QR Ph)">Paid (PayMongo / QR Ph)</option>
                                     <option value="Credit / Utang">Credit / Utang (Collectible)</option>
                                 </select>
                             </div>
@@ -760,46 +730,22 @@
 
                     <!-- FORM 4: RECORD GCASH REMITTANCE -->
                     <form id="form-remit" class="space-y-4 hidden">
-                        <!-- Receiving GCash Account Banner -->
-                        <div class="bg-sky-50 border border-sky-200 rounded-xl p-3 flex items-center justify-between gap-2">
-                            <div class="min-w-0">
-                                <p class="text-[11px] font-bold uppercase tracking-wider text-sky-700">Send Remittance To GCash:</p>
-                                <p id="display-gcash-info" class="text-xs sm:text-sm font-extrabold text-sky-950 truncate">Danilo Darantinao • Set Number in Admin</p>
-                            </div>
-                            <button type="button" onclick="copyGCashNumber()" class="min-h-[36px] px-2.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-[11px] font-bold shrink-0 inline-flex items-center gap-1 cursor-pointer">
-                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                                <span>Copy</span>
-                            </button>
-                        </div>
-
-                        <!-- Integrated BPI InstaPay QR Code Box -->
-                        <div class="bg-rose-50/75 border border-rose-200 rounded-xl p-3">
-                            <div class="flex items-center justify-between gap-2 mb-2">
-                                <div class="flex items-center gap-1.5">
-                                    <span class="px-2 py-0.5 rounded-md bg-rose-600 text-white text-[10px] font-extrabold tracking-wide">BPI</span>
-                                    <span class="text-xs font-extrabold text-slate-900">InstaPay QR Code</span>
+                        <!-- Receiving PayMongo QR Ph Banner & Image -->
+                        <div class="bg-sky-50 border border-sky-200 rounded-xl p-3.5 space-y-3">
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="min-w-0">
+                                    <p class="text-[11px] font-bold uppercase tracking-wider text-sky-700">PayMongo QR Ph • Scan to Remit:</p>
+                                    <p id="display-gcash-info" class="text-xs sm:text-sm font-extrabold text-sky-950 truncate">Dandarz Computer Trading • QR Ph (No Fees)</p>
                                 </div>
-                                <div class="flex items-center gap-1.5">
-                                    <button type="button" onclick="openBPIQRModal()" class="min-h-[32px] px-2.5 py-1 rounded-lg bg-white hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] font-bold inline-flex items-center gap-1 transition cursor-pointer">
-                                        <i data-lucide="maximize-2" class="w-3 h-3"></i>
-                                        <span>Full QR</span>
-                                    </button>
-                                    <button type="button" onclick="downloadBPIQRCode()" class="min-h-[32px] px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold inline-flex items-center gap-1 transition cursor-pointer">
-                                        <i data-lucide="download" class="w-3 h-3"></i>
-                                        <span>Save</span>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <button type="button" onclick="openBPIQRModal()" aria-label="Tap to view full BPI InstaPay QR code" class="w-24 h-24 rounded-xl overflow-hidden border border-rose-200 bg-white shrink-0 shadow-2xs cursor-pointer">
-                                    <canvas id="bpi-qr-thumb-canvas" width="160" height="160" class="w-full h-full object-contain"></canvas>
+                                <button type="button" onclick="copyGCashNumber()" class="min-h-[36px] px-2.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-[11px] font-bold shrink-0 inline-flex items-center gap-1 cursor-pointer">
+                                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                    <span>Copy</span>
                                 </button>
-                                <div class="min-w-0 text-xs space-y-0.5">
-                                    <p class="font-extrabold text-slate-900">TIF</p>
-                                    <p class="font-semibold text-slate-700 break-words">DA•••O BA••••N DA•••••••O</p>
-                                    <p class="font-mono font-bold text-slate-800">•••••••••••117</p>
-                                    <p class="text-[11px] text-rose-700 font-medium pt-0.5">Please tap QR to enlarge.</p>
-                                </div>
+                            </div>
+                            <div class="bg-white border border-sky-200/90 rounded-xl p-2.5 flex flex-col items-center justify-center shadow-2xs">
+                                <img id="paymongo-qr-img" src="paymongo-qr.png" onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='PayMongo.png';}else{this.style.display='none';document.getElementById('paymongo-qr-missing').classList.remove('hidden');}" alt="PayMongo QR Ph Code — Dandarz Computer Trading" class="w-52 max-w-full h-auto rounded-lg object-contain">
+                                <p id="paymongo-qr-missing" class="hidden text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mt-1 text-center">Ibutang ang <strong>paymongo-qr.png</strong> sa parehas nga folder sa HTML file aron makita ang QR code.</p>
+                                <span class="text-[11px] font-medium text-slate-500 mt-1.5">QR Ph • Banks, E-Wallets &amp; More • Powered by PayMongo</span>
                             </div>
                         </div>
 
@@ -838,7 +784,7 @@
 
                         <button type="submit" class="w-full min-h-[46px] py-3 px-4 rounded-xl bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white font-bold text-sm shadow-sm flex items-center justify-center gap-2 transition cursor-pointer">
                             <i data-lucide="send" class="w-4 h-4"></i>
-                            <span>Submit GCash Remittance Log</span>
+                            <span>Submit PayMongo Remittance Log</span>
                         </button>
                     </form>
                 </div>
@@ -903,9 +849,9 @@
                 <div>
                     <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
                         <i data-lucide="smartphone" class="w-5 h-5 text-sky-600"></i>
-                        GCash Remittance Log &amp; Verification
+                        PayMongo Remittance Log &amp; Verification
                     </h3>
-                    <p class="text-xs text-slate-600 mt-0.5">Live remittance records sent by farm caretaker • Admin can verify once received in GCash</p>
+                    <p class="text-xs text-slate-600 mt-0.5">Live remittance records sent by farm caretaker • Admin can verify once received in PayMongo</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 text-xs">
                     <span class="px-3 py-1.5 rounded-xl bg-white border border-sky-200 font-bold text-sky-900">
@@ -922,7 +868,7 @@
                     <thead>
                         <tr class="bg-slate-50/90 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                             <th class="py-3.5 px-4">Date</th>
-                            <th class="py-3 px-3">GCash Ref. No.</th>
+                            <th class="py-3 px-3">PayMongo Ref. No.</th>
                             <th class="py-3 px-3">Sent By</th>
                             <th class="py-3 px-3 text-right">Amount</th>
                             <th class="py-3 px-4">Coverage / Notes</th>
@@ -935,7 +881,7 @@
             </div>
 
             <div id="remittance-empty-state" class="py-8 px-6 text-center text-xs text-slate-500">
-                No GCash remittances recorded yet. Use the <strong>GCash</strong> tab above to log a transfer.
+                No PayMongo remittances recorded yet. Use the <strong>PayMongo</strong> tab above to log a transfer.
             </div>
         </section>
 
@@ -999,7 +945,7 @@
     <!-- Footer -->
     <footer class="bg-white border-t border-earth-200/80 py-4 px-4 sm:px-6 lg:px-8 mt-8">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 text-center sm:text-left">
-            <p class="font-medium text-slate-700">Tyler's Integrated Farm &bull; Vegetable Harvest, Inventory &amp; GCash Remittance</p>
+            <p class="font-medium text-slate-700">Tyler's Integrated Farm &bull; Vegetable Harvest, Inventory &amp; PayMongo Remittance</p>
             <p>Live autosync via Firebase (<code class="text-[11px] bg-slate-100 px-1.5 py-0.5 rounded">tif-inventory</code>) + local cache.</p>
         </div>
     </footer>
@@ -1074,159 +1020,8 @@
         let crops = [];
         let transactions = [];
         let remittances = [];
-        let gcashInfo = { accountName: 'Danilo Darantinao', accountNumber: '' };
+        let gcashInfo = { accountName: 'Dandarz Computer Trading', accountNumber: 'QR Ph • No Fees' };
         let confirmCallback = null;
-        let bpiQRDataUrl = '';
-
-        /* Deterministic BPI InstaPay QR visual generator */
-        function renderBPIQRCard() {
-            const thumbCanvas = document.getElementById('bpi-qr-thumb-canvas');
-            if (!thumbCanvas) return;
-
-            const qrSize = 420;
-            const fullCanvas = document.createElement('canvas');
-            fullCanvas.width = 760;
-            fullCanvas.height = 980;
-            const ctx = fullCanvas.getContext('2d');
-
-            // Red InstaPay backdrop
-            ctx.fillStyle = '#e03e3e';
-            ctx.fillRect(0, 0, fullCanvas.width, fullCanvas.height);
-
-            // White QR card
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.roundRect(65, 55, 630, 870, 34);
-            ctx.fill();
-
-            // Header labels matching BPI slip
-            ctx.textAlign = 'center';
-            ctx.fillStyle = '#e53935';
-            ctx.font = '800 54px Inter, sans-serif';
-            ctx.fillText('BPI', 380, 145);
-
-            ctx.fillStyle = '#1e293b';
-            ctx.font = '800 34px Inter, sans-serif';
-            ctx.fillText('TIF', 380, 212);
-
-            ctx.fillStyle = '#334155';
-            ctx.font = '600 28px Inter, sans-serif';
-            ctx.fillText('DA•••O BA••••N DA•••••••O', 380, 265);
-            ctx.fillText('•••••••••••117', 380, 315);
-
-            // QR matrix generation (33x33 with finder patterns + deterministic payload bits)
-            const gridN = 33;
-            const qrLeft = 380 - qrSize / 2;
-            const qrTop = 360;
-            const cell = qrSize / gridN;
-            const matrix = Array.from({ length: gridN }, () => Array(gridN).fill(0));
-
-            function drawFinder(r0, c0) {
-                for (let r = 0; r < 7; r++) {
-                    for (let c = 0; c < 7; c++) {
-                        const isBorder = r === 0 || r === 6 || c === 0 || c === 6;
-                        const isCenter = r >= 2 && r <= 4 && c >= 2 && c <= 4;
-                        matrix[r0 + r][c0 + c] = (isBorder || isCenter) ? 1 : 0;
-                    }
-                }
-            }
-            drawFinder(0, 0);
-            drawFinder(0, gridN - 7);
-            drawFinder(gridN - 7, 0);
-
-            // Timing lines
-            for (let i = 7; i < gridN - 7; i++) {
-                matrix[6][i] = (i % 2 === 0) ? 1 : 0;
-                matrix[i][6] = (i % 2 === 0) ? 1 : 0;
-            }
-
-            // Deterministic pseudo-random fill for data modules
-            let seed = 1924644778;
-            for (let r = 0; r < gridN; r++) {
-                for (let c = 0; c < gridN; c++) {
-                    const inTopLeft = r < 8 && c < 8;
-                    const inTopRight = r < 8 && c >= gridN - 8;
-                    const inBottomLeft = r >= gridN - 8 && c < 8;
-                    const isTiming = r === 6 || c === 6;
-                    if (inTopLeft || inTopRight || inBottomLeft || isTiming) continue;
-                    seed = (seed * 1664525 + 1013904223) >>> 0;
-                    matrix[r][c] = ((seed >>> 24) & 1) ? 1 : 0;
-                }
-            }
-
-            ctx.fillStyle = '#0f172a';
-            for (let r = 0; r < gridN; r++) {
-                for (let c = 0; c < gridN; c++) {
-                    if (matrix[r][c] === 1) {
-                        ctx.fillRect(
-                            Math.round(qrLeft + c * cell),
-                            Math.round(qrTop + r * cell),
-                            Math.ceil(cell),
-                            Math.ceil(cell)
-                        );
-                    }
-                }
-            }
-
-            // Center InstaPay badge
-            const badgeW = 114;
-            const badgeH = 66;
-            const badgeX = 380 - badgeW / 2;
-            const badgeY = qrTop + qrSize / 2 - badgeH / 2;
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(badgeX, badgeY, badgeW, badgeH);
-            ctx.strokeStyle = '#e2e8f0';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(badgeX, badgeY, badgeW, badgeH);
-
-            ctx.fillStyle = '#1e40af';
-            ctx.font = '800 22px Inter, sans-serif';
-            ctx.fillText('insta', 380, badgeY + 26);
-            ctx.fillStyle = '#dc2626';
-            ctx.font = '800 24px Inter, sans-serif';
-            ctx.fillText('Pay', 380, badgeY + 52);
-
-            ctx.fillStyle = '#64748b';
-            ctx.font = '500 24px Inter, sans-serif';
-            ctx.fillText('Transfer fees may apply', 380, 845);
-
-            bpiQRDataUrl = fullCanvas.toDataURL('image/png');
-
-            const tCtx = thumbCanvas.getContext('2d');
-            tCtx.clearRect(0, 0, thumbCanvas.width, thumbCanvas.height);
-            tCtx.drawImage(fullCanvas, 0, 0, thumbCanvas.width, thumbCanvas.height);
-
-            const modalImg = document.getElementById('bpi-qr-modal-img');
-            if (modalImg) modalImg.src = bpiQRDataUrl;
-        }
-
-        function openBPIQRModal() {
-            if (!bpiQRDataUrl) renderBPIQRCard();
-            const modal = document.getElementById('bpi-qr-modal');
-            if (!modal) return;
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            lucide.createIcons();
-        }
-
-        function closeBPIQRModal() {
-            const modal = document.getElementById('bpi-qr-modal');
-            if (!modal) return;
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        function downloadBPIQRCode() {
-            if (!bpiQRDataUrl) renderBPIQRCard();
-            const link = document.createElement('a');
-            link.href = bpiQRDataUrl;
-            link.download = 'BPI_InstaPay_QR_TIF_117.png';
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-            setTimeout(() => document.body.removeChild(link), 1200);
-            showToast('Gi-download ang BPI QR code.', 'success');
-        }
 
         function setLiveSyncStatus(state, text) {
             const badge = document.getElementById('live-sync-badge');
@@ -1342,7 +1137,7 @@
                     if (hasInitialRemitSnapshot && !snap.metadata.hasPendingWrites && snap.docChanges().length > 0 && prevCount !== cloudRemits.length) {
                         const hasRemoteChange = snap.docChanges().some(ch => ch.doc.metadata.fromCache === false);
                         if (hasRemoteChange) {
-                            showToast('GCash remittance updated live!', 'success');
+                            showToast('PayMongo remittance updated live!', 'success');
                         }
                     }
                     hasInitialRemitSnapshot = true;
@@ -1691,7 +1486,6 @@
             safeSetStorage(ROLE_STORAGE_KEY, activeRole);
             applyRolePermissions();
             updateGCashBannerDisplay();
-            renderBPIQRCard();
 
             populateCropDropdowns();
             autoFillHarvestPrice();
@@ -1725,7 +1519,6 @@
 
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
-                    closeBPIQRModal();
                     closeCropModal();
                     closeAdminPasswordSettingsModal();
                     closeEditTxModal();
@@ -2002,7 +1795,7 @@
 
         function toggleVerifyRemittance(remitId) {
             if (activeRole !== 'admin') {
-                showToast('Admin mode required to verify GCash remittances.', 'error');
+                showToast('Admin mode required to verify PayMongo remittances.', 'error');
                 return;
             }
             const item = remittances.find(r => r.id === remitId);
@@ -2019,7 +1812,7 @@
             pendingGCashVerifyId = remitId;
             titleEl.textContent = willVerify ? 'Verify GCash Payment?' : 'Revert to Pending Check?';
             msgEl.textContent = willVerify
-                ? 'Kumpirmahin na natanggap mo na ang bayad na ito sa iyong GCash account.'
+                ? 'Kumpirmahin na natanggap mo na ang bayad na ito sa iyong PayMongo account.'
                 : 'Ibalik ang status ng remittance na ito sa Pending Check?';
 
             detailsEl.classList.remove('hidden');
@@ -2050,17 +1843,17 @@
                 renderAll();
 
                 if (target.verified) {
-                    showToast(`Verified GCash Ref #${target.refNo} (${formatPHP(target.amount)})`, 'success');
+                    showToast(`Verified PayMongo Ref #${target.refNo} (${formatPHP(target.amount)})`, 'success');
                     openVerifiedPopUpMessage(
                         'Payment Verified!',
-                        `Na-verify na ang GCash payment na ${formatPHP(target.amount)} (Ref #${target.refNo || '—'}) mula kay ${target.sender || 'Farm Staff'}.`,
+                        `Na-verify na ang PayMongo payment na ${formatPHP(target.amount)} (Ref #${target.refNo || '—'}) mula kay ${target.sender || 'Farm Staff'}.`,
                         true
                     );
                 } else {
                     showToast('Marked as pending verification.', 'warning');
                     openVerifiedPopUpMessage(
                         'Status Updated to Pending',
-                        `Naibalik sa Pending Check ang GCash remittance na ${formatPHP(target.amount)} (Ref #${target.refNo || '—'}).`,
+                        `Naibalik sa Pending Check ang PayMongo remittance na ${formatPHP(target.amount)} (Ref #${target.refNo || '—'}).`,
                         false
                     );
                 }
@@ -2312,7 +2105,6 @@
                     btn.setAttribute('aria-selected', 'true');
                     btn.classList.add(...activeStyles[t]);
                     form.classList.remove('hidden');
-                    if (t === 'remit') renderBPIQRCard();
                 } else {
                     btn.setAttribute('aria-selected', 'false');
                     btn.classList.add(...inactiveStyles[t]);
@@ -2527,7 +2319,7 @@
             const notes = document.getElementById('remit-notes').value.trim();
 
             if (isNaN(amount) || amount <= 0 || !refNo) {
-                showToast('Please enter a valid amount and GCash Reference No.', 'error');
+                showToast('Please enter a valid amount and PayMongo Reference No.', 'error');
                 return;
             }
 
@@ -2548,7 +2340,7 @@
             document.getElementById('remit-amount').value = '';
             document.getElementById('remit-ref').value = '';
             document.getElementById('remit-notes').value = '';
-            showToast(`GCash remittance of ${formatPHP(amount)} (Ref #${refNo}) logged!`, 'success');
+            showToast(`PayMongo remittance of ${formatPHP(amount)} (Ref #${refNo}) logged!`, 'success');
         });
 
         function openCropModal() {
@@ -2939,7 +2731,7 @@
                 { id: 'sample-1', type: 'HARVEST', date: fmtDate(3), cropId: 'crop-atsal', cropName: 'Bell Pepper (Atsal)', grade: 'Class A (Good)', qty: 65.0, unitPrice: 120.00, notes: 'Greenhouse 1 - First picking', createdAt: Date.now() - 500000 },
                 { id: 'sample-3', type: 'HARVEST', date: fmtDate(2), cropId: 'crop-pakwan', cropName: 'Watermelon (Pakwan)', grade: 'Class A (Good)', qty: 240.0, unitPrice: 35.00, notes: 'Open Field Block A', createdAt: Date.now() - 400000 },
                 { id: 'sample-5', type: 'SALE', date: fmtDate(1), cropId: 'crop-pakwan', cropName: 'Watermelon (Pakwan)', grade: 'Class A (Good)', qty: 150.0, unitPrice: 42.00, buyer: 'Ormoc Public Market Wholesaler', paymentStatus: 'Paid (Cash)', createdAt: Date.now() - 200000 },
-                { id: 'sample-6', type: 'SALE', date: fmtDate(0), cropId: 'crop-atsal', cropName: 'Bell Pepper (Atsal)', grade: 'Class A (Good)', qty: 40.0, unitPrice: 140.00, buyer: 'Baybay City Trading', paymentStatus: 'Paid (GCash / Bank)', createdAt: Date.now() - 100000 }
+                { id: 'sample-6', type: 'SALE', date: fmtDate(0), cropId: 'crop-atsal', cropName: 'Bell Pepper (Atsal)', grade: 'Class A (Good)', qty: 40.0, unitPrice: 140.00, buyer: 'Baybay City Trading', paymentStatus: 'Paid (PayMongo / QR Ph)', createdAt: Date.now() - 100000 }
             ];
             remittances = [
                 { id: 'sample-remit-1', date: fmtDate(0), amount: 8000.00, refNo: '8024 918 331209', sender: 'Kuya Jun (Farm Caretaker)', notes: 'Partial remittance from Pakwan & Atsal sales', verified: true, createdAt: Date.now() - 50000 }
